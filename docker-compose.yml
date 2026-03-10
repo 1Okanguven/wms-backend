@@ -1,0 +1,15 @@
+services:
+  postgres-db:
+    image: postgres:15
+    container_name: wms_database
+    environment:
+      POSTGRES_USER: wms_admin
+      POSTGRES_PASSWORD: wms_password
+      POSTGRES_DB: wms_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
