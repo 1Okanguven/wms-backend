@@ -8,6 +8,7 @@ import { WarehouseModule } from './warehouse/warehouse.module';
 import { ZoneModule } from './zone/zone.module';
 import { AisleModule } from './aisle/aisle.module';
 import { RackModule } from './rack/rack.module';
+import { ProductModule } from './product/product.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { RackModule } from './rack/rack.module';
     ZoneModule,
     AisleModule,
     RackModule,
+    ProductModule,
   ],
   controllers: [AppController],
   providers: [AppService],
