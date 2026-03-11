@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany } from 'typeorm';
 import { Aisle } from '../../aisle/entities/aisle.entity';
+import { Inventory } from '../../inventory/entities/inventory.entity';
 
 @Entity('racks')
 export class Rack {
@@ -17,6 +18,9 @@ export class Rack {
 
     @ManyToOne(() => Aisle, aisle => aisle.racks, { onDelete: 'CASCADE' })
     aisle: Aisle;
+
+    @OneToMany(() => Inventory, inventory => inventory.rack)
+    inventories: Inventory[];
 
     @CreateDateColumn()
     createdAt: Date;

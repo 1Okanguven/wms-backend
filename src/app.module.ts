@@ -9,6 +9,7 @@ import { ZoneModule } from './zone/zone.module';
 import { AisleModule } from './aisle/aisle.module';
 import { RackModule } from './rack/rack.module';
 import { ProductModule } from './product/product.module';
+import { InventoryModule } from './inventory/inventory.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ProductModule } from './product/product.module';
     AisleModule,
     RackModule,
     ProductModule,
+    InventoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],
