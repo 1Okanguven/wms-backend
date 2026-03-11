@@ -10,6 +10,7 @@ import { AisleModule } from './aisle/aisle.module';
 import { RackModule } from './rack/rack.module';
 import { ProductModule } from './product/product.module';
 import { InventoryModule } from './inventory/inventory.module';
+import { MovementModule } from './movement/movement.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { InventoryModule } from './inventory/inventory.module';
     RackModule,
     ProductModule,
     InventoryModule,
+    MovementModule,
   ],
   controllers: [AppController],
   providers: [AppService],
