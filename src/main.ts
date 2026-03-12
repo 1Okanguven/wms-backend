@@ -9,6 +9,7 @@ async function bootstrap() {
     .setTitle('WMS Envanter API')
     .setDescription('Gelişmiş Depo ve Envanter Yönetim Sistemi API Dokümantasyonu')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

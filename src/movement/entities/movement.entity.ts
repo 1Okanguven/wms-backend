@@ -1,11 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Product } from '../../product/entities/product.entity';
 import { Rack } from '../../rack/entities/rack.entity';
+import { User } from '../../user/entities/user.entity';
 
 export enum MovementType {
-    IN = 'IN', // Mal Kabul
-    OUT = 'OUT', // Sevkiyat
-    TRANSFER = 'TRANSFER', // Depo İçi Transfer
+    IN = 'IN',
+    OUT = 'OUT',
+    TRANSFER = 'TRANSFER',
 }
 
 @Entity('movements')
@@ -16,20 +17,26 @@ export class Movement {
     @Column({ type: 'enum', enum: MovementType })
     type: MovementType;
 
-    @Column({ type: 'int' })
+    @Column('int')
     quantity: number;
 
-    @ManyToOne(() => Product, { onDelete: 'CASCADE' })
+    @ManyToOne(() => Product)
+    @JoinColumn({ name: 'productId' })
     product: Product;
 
-    // Çıkış yapılan raf (Mal kabulde boş kalabilir)
-    @ManyToOne(() => Rack, { nullable: true, onDelete: 'SET NULL' })
+    @ManyToOne(() => Rack, { nullable: true })
+    @JoinColumn({ name: 'sourceRackId' })
     sourceRack: Rack;
 
-    // Giriş yapılan raf (Sevkiyatta boş kalabilir)
-    @ManyToOne(() => Rack, { nullable: true, onDelete: 'SET NULL' })
+    @ManyToOne(() => Rack, { nullable: true })
+    @JoinColumn({ name: 'destinationRackId' })
     destinationRack: Rack;
 
+    // Hareketi yapan personel
+    @ManyToOne(() => User)
+    @JoinColumn({ name: 'userId' })
+    user: User;
+
     @CreateDateColumn()
-    createdAt: Date; // İşlemin yapıldığı an
+    createdAt: Date;
 }

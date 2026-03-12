@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -11,9 +12,14 @@ import { RackModule } from './rack/rack.module';
 import { ProductModule } from './product/product.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { MovementModule } from './movement/movement.module';
+import { UserModule } from './user/user.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'localhost',
@@ -23,7 +29,7 @@ import { MovementModule } from './movement/movement.module';
       database: 'wms_db',
       entities: [],
       autoLoadEntities: true,
-      synchronize: true, // Geliştirme ortamı için harika bir özellik!
+      synchronize: true,
     }),
     CompanyModule,
     BranchModule,
@@ -34,6 +40,8 @@ import { MovementModule } from './movement/movement.module';
     ProductModule,
     InventoryModule,
     MovementModule,
+    UserModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

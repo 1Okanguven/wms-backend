@@ -16,30 +16,26 @@ export class MovementService {
     private readonly dataSource: DataSource, // Transaction yönetimi için eklendi
   ) { }
 
-  async create(createMovementDto: CreateMovementDto) {
+  async create(createMovementDto: CreateMovementDto, userId: string) {
     // 1. QueryRunner oluştur ve veritabanına bağlan
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
-
     // 2. Transaction'ı (bölünemez işlemi) başlat
     await queryRunner.startTransaction();
 
     try {
       // BÜTÜN İŞLEMLERİ ARTIK queryRunner.manager ÜZERİNDEN YAPIYORUZ
 
-      // IN (Mal Kabul)
       if (createMovementDto.type === MovementType.IN) {
         if (!createMovementDto.destinationRackId) throw new BadRequestException('IN işlemi için hedef raf zorunludur.');
         await this.increaseStock(queryRunner.manager, createMovementDto.productId, createMovementDto.destinationRackId, createMovementDto.quantity);
       }
 
-      // OUT (Sevkiyat)
       if (createMovementDto.type === MovementType.OUT) {
         if (!createMovementDto.sourceRackId) throw new BadRequestException('OUT işlemi için kaynak raf zorunludur.');
         await this.decreaseStock(queryRunner.manager, createMovementDto.productId, createMovementDto.sourceRackId, createMovementDto.quantity);
       }
 
-      // TRANSFER (Depo İçi Taşıma)
       if (createMovementDto.type === MovementType.TRANSFER) {
         if (!createMovementDto.sourceRackId || !createMovementDto.destinationRackId) {
           throw new BadRequestException('TRANSFER işlemi için hem kaynak hem hedef raf zorunludur.');
@@ -55,6 +51,7 @@ export class MovementService {
         product: { id: createMovementDto.productId },
         sourceRack: createMovementDto.sourceRackId ? { id: createMovementDto.sourceRackId } : undefined,
         destinationRack: createMovementDto.destinationRackId ? { id: createMovementDto.destinationRackId } : undefined,
+        user: { id: userId },
       });
 
       const savedMovement = await queryRunner.manager.save(newMovement);
