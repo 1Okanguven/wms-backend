@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -21,8 +21,18 @@ export class ProductController {
   }
 
   @Get()
-  findAll() {
-    return this.productService.findAll();
+  @ApiQuery({ name: 'page', required: false, type: String, description: 'Sayfa numarası (Örn: 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: String, description: 'Getirilecek kayıt sayısı (Örn: 10)' })
+  @ApiQuery({ name: 'search', required: false, type: String, description: 'Ürün adına göre arama' })
+  findAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+  ) {
+    const pageNumber = page ? parseInt(page, 10) : 1;
+    const limitNumber = limit ? parseInt(limit, 10) : 10;
+
+    return this.productService.findAll(pageNumber, limitNumber, search);
   }
 
   @Get(':id')
