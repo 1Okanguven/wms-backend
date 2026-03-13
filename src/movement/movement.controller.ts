@@ -12,12 +12,8 @@ export class MovementController {
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @Post()
-  create(@Req() req, @Body() createMovementDto: CreateMovementDto) { // @Req eklendi
-    // Bekçi (Guard) kartı onayladığında, karttaki bilgileri otomatik olarak "req.user" içine koyar.
-    // Biz de jwt.strategy.ts'de ayarladığımız o "userId" değerini çekiyoruz:
+  create(@Req() req, @Body() createMovementDto: CreateMovementDto) {
     const userId = req.user.userId;
-
-    // İşlemi yaparken artık ID'yi de servise fısıldıyoruz
     return this.movementService.create(createMovementDto, userId);
   }
 
