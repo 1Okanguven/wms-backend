@@ -16,6 +16,7 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { join } from 'path';
     MovementModule,
     UserModule,
     AuthModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],
