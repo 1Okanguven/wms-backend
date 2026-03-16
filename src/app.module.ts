@@ -14,6 +14,8 @@ import { InventoryModule } from './inventory/inventory.module';
 import { MovementModule } from './movement/movement.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -30,6 +32,10 @@ import { AuthModule } from './auth/auth.module';
       entities: [],
       autoLoadEntities: true,
       synchronize: true,
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads',
     }),
     CompanyModule,
     BranchModule,

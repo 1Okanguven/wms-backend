@@ -22,6 +22,9 @@ export class Product {
     @Column({ default: true })
     isActive: boolean;
 
+    @Column({ nullable: true })
+    imageUrl: string;
+
     // Ürün şirketin kataloğuna aittir
     @ManyToOne(() => Company, company => company.products, { onDelete: 'CASCADE' })
     company: Company;

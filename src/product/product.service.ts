@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike } from 'typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -58,5 +58,16 @@ export class ProductService {
 
   remove(id: string) {
     return `This action removes a #${id} product`;
+  }
+
+  async uploadImage(id: string, imageUrl: string) {
+    const product = await this.findOne(id);
+
+    if (!product) {
+      throw new NotFoundException(`ID'si ${id} olan ürün bulunamadı.`);
+    }
+
+    product.imageUrl = imageUrl;
+    return this.productRepository.save(product);
   }
 }
