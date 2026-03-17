@@ -4,6 +4,7 @@ import { Repository, ILike } from 'typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './entities/product.entity';
+import { GetProductsFilterDto } from './dto/get-products-filter.dto';
 
 @Injectable()
 export class ProductService {
@@ -17,7 +18,7 @@ export class ProductService {
       name: createProductDto.name,
       sku: createProductDto.sku,
       barcode: createProductDto.barcode,
-      category: createProductDto.category,
+      category: { id: createProductDto.categoryId },
       company: { id: createProductDto.companyId }
     });
 
@@ -25,28 +26,30 @@ export class ProductService {
   }
 
 
-  async findAll(page: number = 1, limit: number = 10, search?: string) {
+  async findAll(page: number, limit: number, search?: string) {
     const skip = (page - 1) * limit;
 
-    const whereCondition = search ? { name: ILike(`%${search}%`) } : {};
+    const query = this.productRepository.createQueryBuilder('product');
 
-    const [data, total] = await this.productRepository.findAndCount({
-      where: whereCondition,
-      take: limit,
-      skip: skip,
-      order: { createdAt: 'DESC' },
-    });
+    if (search) {
+      query.where('product.name ILIKE :search OR product.sku ILIKE :search', { search: `%${search}%` });
+    }
+
+    query.skip(skip).take(limit);
+    query.orderBy('product.createdAt', 'DESC');
+
+    const [data, total] = await query.getManyAndCount();
 
     return {
       data,
       meta: {
         total,
         page,
-        limit,
-        totalPages: Math.ceil(total / limit),
+        lastPage: Math.ceil(total / limit),
       },
     };
   }
+
 
   findOne(id: string) {
     return this.productRepository.findOneBy({ id });

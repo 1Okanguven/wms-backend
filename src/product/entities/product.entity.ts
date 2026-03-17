@@ -1,6 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { Company } from '../../company/entities/company.entity';
 import { Inventory } from '../../inventory/entities/inventory.entity';
+import { Category } from '../../category/entities/category.entity';
+
 
 @Entity('products')
 export class Product {
@@ -16,8 +18,10 @@ export class Product {
     @Column({ type: 'varchar', length: 100, nullable: true, unique: true })
     barcode: string; // Fiziksel okutma için barkod
 
-    @Column({ type: 'varchar', length: 100, nullable: true })
-    category: string;
+    // İLİŞKİ: Birden fazla ürün tek bir kategoriye ait olabilir (Many-to-One)
+    @ManyToOne(() => Category, (category) => category.products)
+    @JoinColumn({ name: 'categoryId' }) // Veritabanında categoryId adında bir sütun oluşturur
+    category: Category;
 
     @Column({ default: true })
     isActive: boolean;

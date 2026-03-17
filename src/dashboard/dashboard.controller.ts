@@ -1,10 +1,11 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, UseGuards, Res, StreamableFile, Req } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags, ApiOkResponse, ApiProduces } from '@nestjs/swagger';
 import { DashboardService } from './dashboard.service';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../user/entities/user.entity';
+import type { Response } from 'express';
 
 @ApiTags('Dashboard')
 @Controller('dashboard')
@@ -19,4 +20,21 @@ export class DashboardController {
     getSummary() {
         return this.dashboardService.getSummary();
     }
+
+    @Get('export/low-stock')
+    @Roles(UserRole.ADMIN)
+    @ApiOperation({ summary: 'Kritik stoktaki ürünleri Excel (.xlsx) olarak indirir' })
+    @ApiProduces('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    async downloadLowStockReport(@Res() res: Response) {
+
+        const buffer = await this.dashboardService.exportLowStockAlerts();
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', 'attachment; filename="Kritik_Stok_Raporu.xlsx"');
+
+        res.end(buffer);
+    }
 }
+
+
+
