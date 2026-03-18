@@ -1,26 +1,59 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { Category } from './entities/category.entity';
 
 @Injectable()
 export class CategoryService {
-  create(createCategoryDto: CreateCategoryDto) {
-    return 'This action adds a new category';
+  constructor(
+    @InjectRepository(Category)
+    private readonly categoryRepository: Repository<Category>,
+  ) { }
+
+  async create(createCategoryDto: CreateCategoryDto) {
+    const newCategory = this.categoryRepository.create(createCategoryDto);
+    return await this.categoryRepository.save(newCategory);
   }
 
-  findAll() {
-    return `This action returns all category`;
+  async findAll() {
+    return await this.categoryRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} category`;
+  async findOne(id: string) {
+    const category = await this.categoryRepository.findOneBy({ id });
+    if (!category) {
+      throw new NotFoundException(`ID'si ${id} olan kategori bulunamadı.`);
+    }
+    return category;
   }
 
-  update(id: number, updateCategoryDto: UpdateCategoryDto) {
-    return `This action updates a #${id} category`;
+  async update(id: string, updateCategoryDto: UpdateCategoryDto) {
+    const updateData: any = { ...updateCategoryDto };
+
+    for (const key of Object.keys(updateData)) {
+      if (key !== 'id' && key.endsWith('Id')) {
+        const relationName = key.slice(0, -2);
+        updateData[relationName] = { id: updateData[key] };
+        delete updateData[key];
+      }
+    }
+
+    const category = await this.categoryRepository.preload({
+      id: id,
+      ...updateData,
+    });
+
+    if (!category) {
+      throw new NotFoundException(`ID'si ${id} olan kategori güncellenemedi, bulunamadı.`);
+    }
+
+    return await this.categoryRepository.save(category);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} category`;
+  async remove(id: string) {
+    const category = await this.findOne(id);
+    return await this.categoryRepository.remove(category);
   }
 }

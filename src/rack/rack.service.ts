@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateRackDto } from './dto/create-rack.dto';
@@ -26,15 +26,39 @@ export class RackService {
     return this.rackRepository.find();
   }
 
-  findOne(id: string) {
-    return this.rackRepository.findOneBy({ id });
+  async findOne(id: string) {
+    const rack = await this.rackRepository.findOneBy({ id });
+    if (!rack) {
+      throw new NotFoundException(`ID'si ${id} olan raf bulunamadı.`);
+    }
+    return rack;
   }
 
-  update(id: string, updateRackDto: UpdateRackDto) {
-    return `This action updates a #${id} rack`;
+  async update(id: string, updateRackDto: UpdateRackDto) {
+    const updateData: any = { ...updateRackDto };
+
+    for (const key of Object.keys(updateData)) {
+      if (key !== 'id' && key.endsWith('Id')) {
+        const relationName = key.slice(0, -2);
+        updateData[relationName] = { id: updateData[key] };
+        delete updateData[key];
+      }
+    }
+
+    const rack = await this.rackRepository.preload({
+      id,
+      ...updateData,
+    });
+
+    if (!rack) {
+      throw new NotFoundException(`ID'si ${id} olan raf güncellenemedi, bulunamadı.`);
+    }
+
+    return await this.rackRepository.save(rack);
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} rack`;
+  async remove(id: string) {
+    const rack = await this.findOne(id);
+    return await this.rackRepository.remove(rack);
   }
 }

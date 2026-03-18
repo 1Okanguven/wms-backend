@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateBranchDto } from './dto/create-branch.dto';
@@ -27,15 +27,39 @@ export class BranchService {
     return this.branchRepository.find();
   }
 
-  findOne(id: string) {
-    return this.branchRepository.findOneBy({ id });
+  async findOne(id: string) {
+    const branch = await this.branchRepository.findOneBy({ id });
+    if (!branch) {
+      throw new NotFoundException(`ID'si ${id} olan şube bulunamadı.`);
+    }
+    return branch;
   }
 
-  update(id: string, updateBranchDto: UpdateBranchDto) {
-    return `This action updates a #${id} branch`;
+  async update(id: string, updateBranchDto: UpdateBranchDto) {
+    const updateData: any = { ...updateBranchDto };
+
+    for (const key of Object.keys(updateData)) {
+      if (key !== 'id' && key.endsWith('Id')) {
+        const relationName = key.slice(0, -2);
+        updateData[relationName] = { id: updateData[key] };
+        delete updateData[key];
+      }
+    }
+
+    const branch = await this.branchRepository.preload({
+      id,
+      ...updateData,
+    });
+
+    if (!branch) {
+      throw new NotFoundException(`ID'si ${id} olan şube güncellenemedi, bulunamadı.`);
+    }
+
+    return await this.branchRepository.save(branch);
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} branch`;
+  async remove(id: string) {
+    const branch = await this.findOne(id);
+    return await this.branchRepository.remove(branch);
   }
 }

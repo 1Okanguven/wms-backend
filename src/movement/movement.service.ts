@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, EntityManager } from 'typeorm'; // DataSource ve EntityManager eklendi
 import { CreateMovementDto } from './dto/create-movement.dto';
@@ -108,18 +108,42 @@ export class MovementService {
     });
   }
 
-  findOne(id: string) {
-    return this.movementRepository.findOne({
+  async findOne(id: string) {
+    const movement = await this.movementRepository.findOne({
       where: { id },
       relations: ['product', 'sourceRack', 'destinationRack']
     });
+    if (!movement) {
+      throw new NotFoundException(`ID'si ${id} olan hareket bulunamadı.`);
+    }
+    return movement;
   }
 
-  update(id: string, updateMovementDto: UpdateMovementDto) {
-    return `This action updates a #${id} movement`;
+  async update(id: string, updateMovementDto: UpdateMovementDto) {
+    const updateData: any = { ...updateMovementDto };
+
+    for (const key of Object.keys(updateData)) {
+      if (key !== 'id' && key.endsWith('Id')) {
+        const relationName = key.slice(0, -2);
+        updateData[relationName] = { id: updateData[key] };
+        delete updateData[key];
+      }
+    }
+
+    const movement = await this.movementRepository.preload({
+      id,
+      ...updateData,
+    });
+
+    if (!movement) {
+      throw new NotFoundException(`ID'si ${id} olan hareket güncellenemedi, bulunamadı.`);
+    }
+
+    return await this.movementRepository.save(movement);
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} movement`;
+  async remove(id: string) {
+    const movement = await this.findOne(id);
+    return await this.movementRepository.remove(movement);
   }
 }

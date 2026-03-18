@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateAisleDto } from './dto/create-aisle.dto';
@@ -25,15 +25,39 @@ export class AisleService {
     return this.aisleRepository.find();
   }
 
-  findOne(id: string) {
-    return this.aisleRepository.findOneBy({ id });
+  async findOne(id: string) {
+    const aisle = await this.aisleRepository.findOneBy({ id });
+    if (!aisle) {
+      throw new NotFoundException(`ID'si ${id} olan koridor/aisle bulunamadı.`);
+    }
+    return aisle;
   }
 
-  update(id: string, updateAisleDto: UpdateAisleDto) {
-    return `This action updates a #${id} aisle`;
+  async update(id: string, updateAisleDto: UpdateAisleDto) {
+    const updateData: any = { ...updateAisleDto };
+
+    for (const key of Object.keys(updateData)) {
+      if (key !== 'id' && key.endsWith('Id')) {
+        const relationName = key.slice(0, -2);
+        updateData[relationName] = { id: updateData[key] };
+        delete updateData[key];
+      }
+    }
+
+    const aisle = await this.aisleRepository.preload({
+      id,
+      ...updateData,
+    });
+
+    if (!aisle) {
+      throw new NotFoundException(`ID'si ${id} olan koridor/aisle güncellenemedi, bulunamadı.`);
+    }
+
+    return await this.aisleRepository.save(aisle);
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} aisle`;
+  async remove(id: string) {
+    const aisle = await this.findOne(id);
+    return await this.aisleRepository.remove(aisle);
   }
 }

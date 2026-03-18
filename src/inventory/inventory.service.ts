@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
@@ -28,18 +28,42 @@ export class InventoryService {
     });
   }
 
-  findOne(id: string) {
-    return this.inventoryRepository.findOne({
+  async findOne(id: string) {
+    const inventory = await this.inventoryRepository.findOne({
       where: { id },
       relations: ['product', 'rack']
     });
+    if (!inventory) {
+      throw new NotFoundException(`ID'si ${id} olan envanter kaydı bulunamadı.`);
+    }
+    return inventory;
   }
 
-  update(id: string, updateInventoryDto: UpdateInventoryDto) {
-    return `This action updates a #${id} inventory`;
+  async update(id: string, updateInventoryDto: UpdateInventoryDto) {
+    const updateData: any = { ...updateInventoryDto };
+
+    for (const key of Object.keys(updateData)) {
+      if (key !== 'id' && key.endsWith('Id')) {
+        const relationName = key.slice(0, -2);
+        updateData[relationName] = { id: updateData[key] };
+        delete updateData[key];
+      }
+    }
+
+    const inventory = await this.inventoryRepository.preload({
+      id,
+      ...updateData,
+    });
+
+    if (!inventory) {
+      throw new NotFoundException(`ID'si ${id} olan envanter güncellenemedi, bulunamadı.`);
+    }
+
+    return await this.inventoryRepository.save(inventory);
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} inventory`;
+  async remove(id: string) {
+    const inventory = await this.findOne(id);
+    return await this.inventoryRepository.remove(inventory);
   }
 }

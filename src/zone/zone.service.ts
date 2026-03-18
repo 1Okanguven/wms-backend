@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateZoneDto } from './dto/create-zone.dto';
@@ -26,15 +26,39 @@ export class ZoneService {
     return this.zoneRepository.find();
   }
 
-  findOne(id: string) {
-    return this.zoneRepository.findOneBy({ id });
+  async findOne(id: string) {
+    const zone = await this.zoneRepository.findOneBy({ id });
+    if (!zone) {
+      throw new NotFoundException(`ID'si ${id} olan alan (zone) bulunamadı.`);
+    }
+    return zone;
   }
 
-  update(id: string, updateZoneDto: UpdateZoneDto) {
-    return `This action updates a #${id} zone`;
+  async update(id: string, updateZoneDto: UpdateZoneDto) {
+    const updateData: any = { ...updateZoneDto };
+
+    for (const key of Object.keys(updateData)) {
+      if (key !== 'id' && key.endsWith('Id')) {
+        const relationName = key.slice(0, -2);
+        updateData[relationName] = { id: updateData[key] };
+        delete updateData[key];
+      }
+    }
+
+    const zone = await this.zoneRepository.preload({
+      id,
+      ...updateData,
+    });
+
+    if (!zone) {
+      throw new NotFoundException(`ID'si ${id} olan alan (zone) güncellenemedi, bulunamadı.`);
+    }
+
+    return await this.zoneRepository.save(zone);
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} zone`;
+  async remove(id: string) {
+    const zone = await this.findOne(id);
+    return await this.zoneRepository.remove(zone);
   }
 }

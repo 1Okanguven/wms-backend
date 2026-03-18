@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateWarehouseDto } from './dto/create-warehouse.dto';
@@ -26,15 +26,39 @@ export class WarehouseService {
     return this.warehouseRepository.find();
   }
 
-  findOne(id: string) {
-    return this.warehouseRepository.findOneBy({ id });
+  async findOne(id: string) {
+    const warehouse = await this.warehouseRepository.findOneBy({ id });
+    if (!warehouse) {
+      throw new NotFoundException(`ID'si ${id} olan depo bulunamadı.`);
+    }
+    return warehouse;
   }
 
-  update(id: string, updateWarehouseDto: UpdateWarehouseDto) {
-    return `This action updates a #${id} warehouse`;
+  async update(id: string, updateWarehouseDto: UpdateWarehouseDto) {
+    const updateData: any = { ...updateWarehouseDto };
+
+    for (const key of Object.keys(updateData)) {
+      if (key !== 'id' && key.endsWith('Id')) {
+        const relationName = key.slice(0, -2);
+        updateData[relationName] = { id: updateData[key] };
+        delete updateData[key];
+      }
+    }
+
+    const warehouse = await this.warehouseRepository.preload({
+      id,
+      ...updateData,
+    });
+
+    if (!warehouse) {
+      throw new NotFoundException(`ID'si ${id} olan depo güncellenemedi, bulunamadı.`);
+    }
+
+    return await this.warehouseRepository.save(warehouse);
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} warehouse`;
+  async remove(id: string) {
+    const warehouse = await this.findOne(id);
+    return await this.warehouseRepository.remove(warehouse);
   }
 }

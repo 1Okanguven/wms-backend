@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateCompanyDto } from './dto/create-company.dto';
@@ -7,31 +7,53 @@ import { Company } from './entities/company.entity';
 
 @Injectable()
 export class CompanyService {
-
   constructor(
     @InjectRepository(Company)
     private readonly companyRepository: Repository<Company>,
   ) { }
 
   async create(createCompanyDto: CreateCompanyDto) {
-
     const newCompany = this.companyRepository.create(createCompanyDto);
     return await this.companyRepository.save(newCompany);
   }
 
-  findAll() {
-    return this.companyRepository.find();
+  async findAll() {
+    return await this.companyRepository.find();
   }
 
-  findOne(id: string) {
-    return this.companyRepository.findOneBy({ id });
+  async findOne(id: string) {
+    const company = await this.companyRepository.findOneBy({ id });
+    if (!company) {
+      throw new NotFoundException(`ID'si ${id} olan şirket/hub bulunamadı.`);
+    }
+    return company;
   }
 
-  update(id: string, updateCompanyDto: UpdateCompanyDto) {
-    return `This action updates a #${id} company`;
+  async update(id: string, updateCompanyDto: UpdateCompanyDto) {
+    const updateData: any = { ...updateCompanyDto };
+
+    for (const key of Object.keys(updateData)) {
+      if (key !== 'id' && key.endsWith('Id')) {
+        const relationName = key.slice(0, -2);
+        updateData[relationName] = { id: updateData[key] };
+        delete updateData[key];
+      }
+    }
+
+    const company = await this.companyRepository.preload({
+      id: id,
+      ...updateData,
+    });
+
+    if (!company) {
+      throw new NotFoundException(`ID'si ${id} olan şirket güncellenemedi, bulunamadı.`);
+    }
+
+    return await this.companyRepository.save(company);
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} company`;
+  async remove(id: string) {
+    const company = await this.findOne(id);
+    return await this.companyRepository.remove(company);
   }
 }

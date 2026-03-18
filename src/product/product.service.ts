@@ -14,31 +14,42 @@ export class ProductService {
   ) { }
 
   async create(createProductDto: CreateProductDto) {
+    const generatedBarcode = createProductDto.barcode
+      ? createProductDto.barcode
+      : `WMS-${createProductDto.sku}-${Date.now().toString().slice(-4)}`;
+
     const newProduct = this.productRepository.create({
-      name: createProductDto.name,
-      sku: createProductDto.sku,
-      barcode: createProductDto.barcode,
+      ...createProductDto,
+      barcode: generatedBarcode,
+      // Kategori ilişkisini bağlamıştık:
       category: { id: createProductDto.categoryId },
-      company: { id: createProductDto.companyId }
+      // İŞTE UNUTTUĞUMUZ SATIR: Şirket ilişkisini de bağlamamız gerekiyor!
+      company: { id: createProductDto.companyId },
     });
 
     return await this.productRepository.save(newProduct);
   }
 
-
   async findAll(page: number, limit: number, search?: string) {
     const skip = (page - 1) * limit;
 
-    const query = this.productRepository.createQueryBuilder('product');
+    const queryBuilder = this.productRepository.createQueryBuilder('product');
+
+    // İŞTE EKSİK OLAN SİHİRLİ SATIR BURASI:
+    // Ürünleri çekerken, ilişkili olduğu kategori tablosunu da JSON içine dahil ediyoruz
+    queryBuilder.leftJoinAndSelect('product.category', 'category');
+
+    queryBuilder.leftJoinAndSelect('product.company', 'company');
 
     if (search) {
-      query.where('product.name ILIKE :search OR product.sku ILIKE :search', { search: `%${search}%` });
+      queryBuilder.where('product.name ILIKE :search', { search: `%${search}%` })
+        .orWhere('product.sku ILIKE :search', { search: `%${search}%` });
     }
 
-    query.skip(skip).take(limit);
-    query.orderBy('product.createdAt', 'DESC');
+    queryBuilder.skip(skip).take(limit);
+    queryBuilder.orderBy('product.createdAt', 'DESC');
 
-    const [data, total] = await query.getManyAndCount();
+    const [data, total] = await queryBuilder.getManyAndCount();
 
     return {
       data,
@@ -51,16 +62,40 @@ export class ProductService {
   }
 
 
-  findOne(id: string) {
-    return this.productRepository.findOneBy({ id });
+  async findOne(id: string) {
+    const product = await this.productRepository.findOneBy({ id });
+    if (!product) {
+      throw new NotFoundException(`ID'si ${id} olan ürün bulunamadı.`);
+    }
+    return product;
   }
 
-  update(id: string, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`;
+  async update(id: string, updateProductDto: UpdateProductDto) {
+    const updateData: any = { ...updateProductDto };
+
+    for (const key of Object.keys(updateData)) {
+      if (key !== 'id' && key.endsWith('Id')) {
+        const relationName = key.slice(0, -2);
+        updateData[relationName] = { id: updateData[key] };
+        delete updateData[key];
+      }
+    }
+
+    const product = await this.productRepository.preload({
+      id,
+      ...updateData,
+    });
+
+    if (!product) {
+      throw new NotFoundException(`ID'si ${id} olan ürün güncellenemedi, bulunamadı.`);
+    }
+
+    return await this.productRepository.save(product);
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} product`;
+  async remove(id: string) {
+    const product = await this.findOne(id);
+    return await this.productRepository.remove(product);
   }
 
   async uploadImage(id: string, imageUrl: string) {
