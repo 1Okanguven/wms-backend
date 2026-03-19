@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, EntityManager } from 'typeorm'; // DataSource ve EntityManager eklendi
+import { Repository, DataSource, EntityManager } from 'typeorm';
 import { CreateMovementDto } from './dto/create-movement.dto';
 import { UpdateMovementDto } from './dto/update-movement.dto';
 import { Movement, MovementType } from './entities/movement.entity';
@@ -13,26 +13,23 @@ export class MovementService {
     private readonly movementRepository: Repository<Movement>,
     @InjectRepository(Inventory)
     private readonly inventoryRepository: Repository<Inventory>,
-    private readonly dataSource: DataSource, // Transaction yönetimi için eklendi
+    private readonly dataSource: DataSource,
   ) { }
 
   async create(createMovementDto: CreateMovementDto, userId: string) {
-    // 1. QueryRunner oluştur ve veritabanına bağlan
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
-    // 2. Transaction'ı (bölünemez işlemi) başlat
     await queryRunner.startTransaction();
 
     try {
-      // BÜTÜN İŞLEMLERİ ARTIK queryRunner.manager ÜZERİNDEN YAPIYORUZ
-
       if (createMovementDto.type === MovementType.IN) {
         if (!createMovementDto.destinationRackId) throw new BadRequestException('IN işlemi için hedef raf zorunludur.');
         await this.increaseStock(queryRunner.manager, createMovementDto.productId, createMovementDto.destinationRackId, createMovementDto.quantity);
       }
 
-      if (createMovementDto.type === MovementType.OUT) {
-        if (!createMovementDto.sourceRackId) throw new BadRequestException('OUT işlemi için kaynak raf zorunludur.');
+      // OUT ve yeni eklediğimiz SHIPMENT tipleri aynı mantıkla raftan stok düşürür
+      if (createMovementDto.type === MovementType.OUT || createMovementDto.type === MovementType.SHIPMENT) {
+        if (!createMovementDto.sourceRackId) throw new BadRequestException(`${createMovementDto.type} işlemi için kaynak raf zorunludur.`);
         await this.decreaseStock(queryRunner.manager, createMovementDto.productId, createMovementDto.sourceRackId, createMovementDto.quantity);
       }
 
@@ -41,13 +38,13 @@ export class MovementService {
           throw new BadRequestException('TRANSFER işlemi için hem kaynak hem hedef raf zorunludur.');
         }
         await this.decreaseStock(queryRunner.manager, createMovementDto.productId, createMovementDto.sourceRackId, createMovementDto.quantity);
-
         await this.increaseStock(queryRunner.manager, createMovementDto.productId, createMovementDto.destinationRackId, createMovementDto.quantity);
       }
 
       const newMovement = queryRunner.manager.create(Movement, {
         type: createMovementDto.type,
         quantity: createMovementDto.quantity,
+        referenceNumber: createMovementDto.referenceNumber, // Yeni eklenen referans numarası
         product: { id: createMovementDto.productId },
         sourceRack: createMovementDto.sourceRackId ? { id: createMovementDto.sourceRackId } : undefined,
         destinationRack: createMovementDto.destinationRackId ? { id: createMovementDto.destinationRackId } : undefined,
@@ -56,21 +53,17 @@ export class MovementService {
 
       const savedMovement = await queryRunner.manager.save(newMovement);
 
-      // 3. HER ŞEY BAŞARILIYSA KALICI HALE GETİR (COMMIT)
       await queryRunner.commitTransaction();
       return savedMovement;
 
     } catch (error) {
-      // 4. HATA ÇIKARSA HER ŞEYİ ESKİ HALİNE GERİ SAR (ROLLBACK)
       await queryRunner.rollbackTransaction();
-      throw error; // Hatayı kullanıcıya fırlat
+      throw error;
     } finally {
-      // 5. İşin bitince veritabanı bağlantısını serbest bırak
       await queryRunner.release();
     }
   }
 
-  // YARDIMCI METOTLAR (Artık EntityManager alıyorlar ki aynı transaction içinde çalışsınlar)
   private async increaseStock(manager: EntityManager, productId: string, rackId: string, quantity: number) {
     let inventory = await manager.findOne(Inventory, {
       where: { product: { id: productId }, rack: { id: rackId } }
@@ -120,6 +113,9 @@ export class MovementService {
   }
 
   async update(id: string, updateMovementDto: UpdateMovementDto) {
+    // Hatırlatma: Movement (Hareket) kayıtları yasal loglar olduğu için 
+    // gerçek sistemlerde UPDATE edilmezler. Ancak şu an test/geliştirme aşamasında olduğumuz için
+    // preload mantığını koruyoruz.
     const updateData: any = { ...updateMovementDto };
 
     for (const key of Object.keys(updateData)) {

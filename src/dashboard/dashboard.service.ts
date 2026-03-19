@@ -32,6 +32,13 @@ export class DashboardService {
             .getCount();
 
 
+        const inventorySum = await this.inventoryRepository
+            .createQueryBuilder('inventory')
+            .select('SUM(inventory.quantity)', 'total')
+            .getRawOne();
+
+        const totalStock = parseInt(inventorySum.total, 10) || 0;
+
         const lowStockProducts = await this.inventoryRepository
             .createQueryBuilder('inventory')
             .leftJoin('inventory.product', 'product')
@@ -47,6 +54,7 @@ export class DashboardService {
         return {
             overview: {
                 totalProducts,
+                totalStock,
                 todaysMovements,
             },
             lowStockAlerts: lowStockProducts.map(item => ({

@@ -4,9 +4,10 @@ import { Rack } from '../../rack/entities/rack.entity';
 import { User } from '../../user/entities/user.entity';
 
 export enum MovementType {
-    IN = 'IN',
-    OUT = 'OUT',
-    TRANSFER = 'TRANSFER',
+    IN = 'IN',             // Mal Kabul
+    OUT = 'OUT',           // Fire / Hasar Çıkışı
+    SHIPMENT = 'SHIPMENT', // Müşteriye Sevkiyat
+    TRANSFER = 'TRANSFER', // Depo İçi Transfer
 }
 
 @Entity('movements')
@@ -20,6 +21,10 @@ export class Movement {
     @Column('int')
     quantity: number;
 
+    // Fatura No, İrsaliye No veya Sipariş Kodu gibi resmi referanslar
+    @Column({ type: 'varchar', length: 100, nullable: true })
+    referenceNumber: string;
+
     @ManyToOne(() => Product)
     @JoinColumn({ name: 'productId' })
     product: Product;
@@ -32,7 +37,6 @@ export class Movement {
     @JoinColumn({ name: 'destinationRackId' })
     destinationRack: Rack;
 
-    // Hareketi yapan personel
     @ManyToOne(() => User)
     @JoinColumn({ name: 'userId' })
     user: User;
