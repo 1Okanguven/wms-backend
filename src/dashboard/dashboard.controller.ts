@@ -34,6 +34,22 @@ export class DashboardController {
 
         res.end(buffer);
     }
+
+
+    @Get('export/low-stock/pdf')
+    @Roles(UserRole.ADMIN)
+    @ApiOperation({ summary: 'Kritik stoktaki ürünleri PDF olarak indirir' })
+    @ApiProduces('application/pdf')
+    async downloadLowStockReportPdf(@Res() res: Response) {
+
+        const buffer = await this.dashboardService.exportLowStockAlertsPdf();
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'attachment; filename="Kritik_Stok_Raporu.pdf"');
+
+        res.end(buffer);
+    }
+
 }
 
 

@@ -18,6 +18,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { CategoryModule } from './category/category.module';
+import { OrderModule } from './order/order.module';
 
 @Module({
   imports: [
@@ -28,9 +29,9 @@ import { CategoryModule } from './category/category.module';
       type: 'postgres',
       host: 'localhost',
       port: 5432,
-      username: 'wms_admin',
-      password: 'wms_password',
-      database: 'wms_db',
+      username: process.env.POSTGRES_USER || 'wms_admin',
+      password: process.env.POSTGRES_PASSWORD || 'wms_password',
+      database: process.env.POSTGRES_DB || 'wms_db',
       entities: [],
       autoLoadEntities: true,
       synchronize: true,
@@ -52,6 +53,7 @@ import { CategoryModule } from './category/category.module';
     AuthModule,
     DashboardModule,
     CategoryModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [AppService],

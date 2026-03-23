@@ -5,6 +5,7 @@ import { Product } from '../product/entities/product.entity';
 import { Movement } from '../movement/entities/movement.entity';
 import { Inventory } from '../inventory/entities/inventory.entity';
 import * as ExcelJS from 'exceljs';
+import PDFDocument from 'pdfkit';
 
 @Injectable()
 export class DashboardService {
@@ -107,4 +108,64 @@ export class DashboardService {
 
         return workbook.xlsx.writeBuffer() as unknown as Promise<Buffer>;
     }
+
+    // Mevcut exportLowStockAlerts() metodunun hemen altına bu yeni metodu ekle:
+    async exportLowStockAlertsPdf(): Promise<Buffer> {
+        // 1. Veriyi çekiyoruz (Excel metodundaki ile birebir aynı sorgu)
+        const lowStockProducts = await this.inventoryRepository
+            .createQueryBuilder('inventory')
+            .leftJoin('inventory.product', 'product')
+            .select('product.name', 'productName')
+            .addSelect('product.sku', 'sku')
+            .addSelect('SUM(inventory.quantity)', 'totalQuantity')
+            .groupBy('product.id')
+            .addGroupBy('product.name')
+            .addGroupBy('product.sku')
+            .having('SUM(inventory.quantity) < :limit', { limit: 20 })
+            .getRawMany();
+
+        // 2. PDF oluşturma işlemini bir Promise içine alıyoruz ki Buffer tamamen dolana kadar beklesin
+        return new Promise((resolve, reject) => {
+            const doc = new PDFDocument({ margin: 50 });
+            const buffers: Buffer[] = [];
+
+            // PDF verisi oluştukça buffers dizisine ekle
+            doc.on('data', buffers.push.bind(buffers));
+
+            // İşlem bittiğinde dizideki tüm parçaları tek bir Buffer yap ve resolve et
+            doc.on('end', () => {
+                const pdfData = Buffer.concat(buffers);
+                resolve(pdfData);
+            });
+            doc.on('error', reject);
+
+            doc.fontSize(20).text('Kritik Stok Raporu', { align: 'center' });
+            doc.moveDown(2);
+
+            doc.fontSize(12).font('Helvetica-Bold');
+            doc.text('Ürün Adi', 50, doc.y, { continued: true, width: 250 });
+            doc.text('SKU', 300, doc.y, { continued: true, width: 150 });
+            doc.text('Kalan', 450, doc.y);
+            doc.moveDown(0.5);
+
+            doc.moveTo(50, doc.y).lineTo(550, doc.y).stroke();
+            doc.moveDown(0.5);
+
+            doc.font('Helvetica');
+            lowStockProducts.forEach(item => {
+                const productName = item.productName || 'Bilinmeyen Ürün';
+                const sku = item.sku || '-';
+                const qty = String(parseInt(item.totalQuantity, 10));
+
+                doc.text(productName, 50, doc.y, { continued: true, width: 250 });
+                doc.text(sku, 300, doc.y, { continued: true, width: 150 });
+                doc.text(qty, 450, doc.y);
+                doc.moveDown(0.5);
+            });
+
+            // PDF'i sonlandır (Bu tetiklendiğinde yukarıdaki doc.on('end') çalışır)
+            doc.end();
+        });
+    }
+
 }
