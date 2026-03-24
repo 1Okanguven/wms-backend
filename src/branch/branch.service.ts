@@ -13,18 +13,19 @@ export class BranchService {
   ) { }
 
   async create(createBranchDto: CreateBranchDto) {
-
+    const { companyId, ...rest } = createBranchDto;
     const newBranch = this.branchRepository.create({
-      name: createBranchDto.name,
-      address: createBranchDto.address,
-      company: { id: createBranchDto.companyId }
+      ...rest,
+      company: { id: companyId }
     });
 
     return await this.branchRepository.save(newBranch);
   }
 
   findAll() {
-    return this.branchRepository.find();
+    return this.branchRepository.find({
+      relations: ['company'],
+    });
   }
 
   async findOne(id: string) {

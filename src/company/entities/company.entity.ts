@@ -13,6 +13,15 @@ export class Company {
     @Column({ type: 'varchar', length: 11, unique: true, nullable: true })
     taxNumber: string;
 
+    @Column({ type: 'varchar', length: 100, nullable: true })
+    city: string;
+
+    @Column({ type: 'varchar', length: 100, nullable: true })
+    district: string;
+
+    @Column({ type: 'text', nullable: true })
+    detailedAddress: string;
+
     @Column({ default: true })
     isActive: boolean;
 

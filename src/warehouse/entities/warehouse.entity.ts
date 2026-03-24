@@ -13,6 +13,15 @@ export class Warehouse {
     @Column({ type: 'varchar', length: 50, nullable: true })
     type: string;
 
+    @Column({ type: 'varchar', length: 100, nullable: true })
+    city: string;
+
+    @Column({ type: 'varchar', length: 100, nullable: true })
+    district: string;
+
+    @Column({ type: 'text', nullable: true })
+    detailedAddress: string;
+
     @Column({ default: true })
     isActive: boolean;
 

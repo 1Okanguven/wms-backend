@@ -13,17 +13,19 @@ export class WarehouseService {
   ) { }
 
   async create(createWarehouseDto: CreateWarehouseDto) {
+    const { branchId, ...rest } = createWarehouseDto;
     const newWarehouse = this.warehouseRepository.create({
-      name: createWarehouseDto.name,
-      type: createWarehouseDto.type,
-      branch: { id: createWarehouseDto.branchId }
+      ...rest,
+      branch: { id: branchId }
     });
 
     return await this.warehouseRepository.save(newWarehouse);
   }
 
   findAll() {
-    return this.warehouseRepository.find();
+    return this.warehouseRepository.find({
+      relations: ['branch', 'branch.company'],
+    });
   }
 
   async findOne(id: string) {
