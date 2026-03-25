@@ -23,11 +23,16 @@ export class ZoneService {
   }
 
   findAll() {
-    return this.zoneRepository.find();
+    return this.zoneRepository.find({
+      relations: ['warehouse'],
+    });
   }
 
   async findOne(id: string) {
-    const zone = await this.zoneRepository.findOneBy({ id });
+    const zone = await this.zoneRepository.findOne({
+      where: { id },
+      relations: ['warehouse'],
+    });
     if (!zone) {
       throw new NotFoundException(`ID'si ${id} olan alan (zone) bulunamadı.`);
     }

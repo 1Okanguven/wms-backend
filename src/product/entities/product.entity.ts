@@ -3,7 +3,6 @@ import { Company } from '../../company/entities/company.entity';
 import { Inventory } from '../../inventory/entities/inventory.entity';
 import { Category } from '../../category/entities/category.entity';
 
-
 @Entity('products')
 export class Product {
     @PrimaryGeneratedColumn('uuid')
@@ -13,15 +12,21 @@ export class Product {
     name: string;
 
     @Column({ type: 'varchar', length: 50, unique: true })
-    sku: string; // Stock Keeping Unit - Stok Tutma Birimi (Stok kodu)
+    sku: string;
 
     @Column({ type: 'varchar', length: 100, nullable: true, unique: true })
-    barcode: string; // Fiziksel okutma için barkod
+    barcode: string;
 
-    // İLİŞKİ: Birden fazla ürün tek bir kategoriye ait olabilir (Many-to-One)
     @ManyToOne(() => Category, (category) => category.products)
-    @JoinColumn({ name: 'categoryId' }) // Veritabanında categoryId adında bir sütun oluşturur
+    @JoinColumn({ name: 'categoryId' })
     category: Category;
+
+    // YENİ EKLENENLER: Ölçü Birimi ve SKT Takibi
+    @Column({ type: 'varchar', length: 50, default: 'ADET' })
+    unit: string;
+
+    @Column({ default: false })
+    hasExpiration: boolean;
 
     @Column({ default: true })
     isActive: boolean;
@@ -29,7 +34,6 @@ export class Product {
     @Column({ nullable: true })
     imageUrl: string;
 
-    // Ürün şirketin kataloğuna aittir
     @ManyToOne(() => Company, company => company.products, { onDelete: 'CASCADE' })
     company: Company;
 

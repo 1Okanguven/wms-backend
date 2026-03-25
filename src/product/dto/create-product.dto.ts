@@ -15,4 +15,10 @@ export class CreateProductDto {
 
     @ApiProperty({ description: 'Ürünün ait olduğu şirketin ID değeri (UUID)' })
     companyId: string;
+
+    @ApiProperty({ description: 'Ölçü Birimi (ADET, KG, vb.)', example: 'ADET' })
+    unit: string;
+
+    @ApiPropertyOptional({ description: 'SKT Takibi Zorunlu mu?', example: false })
+    hasExpiration?: boolean;
 }

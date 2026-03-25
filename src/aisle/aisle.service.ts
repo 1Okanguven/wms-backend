@@ -22,11 +22,16 @@ export class AisleService {
   }
 
   findAll() {
-    return this.aisleRepository.find();
+    return this.aisleRepository.find({
+      relations: ['zone', 'zone.warehouse'],
+    });
   }
 
   async findOne(id: string) {
-    const aisle = await this.aisleRepository.findOneBy({ id });
+    const aisle = await this.aisleRepository.findOne({
+      where: { id },
+      relations: ['zone', 'zone.warehouse'],
+    });
     if (!aisle) {
       throw new NotFoundException(`ID'si ${id} olan koridor/aisle bulunamadı.`);
     }

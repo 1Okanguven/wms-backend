@@ -23,11 +23,16 @@ export class RackService {
   }
 
   findAll() {
-    return this.rackRepository.find();
+    return this.rackRepository.find({
+      relations: ['aisle', 'aisle.zone', 'aisle.zone.warehouse'],
+    });
   }
 
   async findOne(id: string) {
-    const rack = await this.rackRepository.findOneBy({ id });
+    const rack = await this.rackRepository.findOne({
+      where: { id },
+      relations: ['aisle', 'aisle.zone', 'aisle.zone.warehouse'],
+    });
     if (!rack) {
       throw new NotFoundException(`ID'si ${id} olan raf bulunamadı.`);
     }

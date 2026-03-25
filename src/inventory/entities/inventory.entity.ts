@@ -10,6 +10,16 @@ export class Inventory {
     @Column({ type: 'int', default: 0 })
     quantity: number;
 
+    // YENİ EKLENENLER: Lot Numarası, SKT ve Üretim Tarihi
+    @Column({ type: 'varchar', length: 100, nullable: true })
+    lotNumber: string;
+
+    @Column({ type: 'date', nullable: true })
+    productionDate: Date;
+
+    @Column({ type: 'date', nullable: true })
+    expirationDate: Date;
+
     @ManyToOne(() => Product, product => product.inventories, { onDelete: 'CASCADE' })
     product: Product;
 
