@@ -31,7 +31,6 @@ export class UserService {
 
     const savedUser = await this.userRepository.save(newUser);
 
-    //GÜVENLİK: Şifreyi API yanıtından (response) çıkar ki dışarı sızmasın!
     const { password, ...result } = savedUser;
     return result;
   }

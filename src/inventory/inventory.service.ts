@@ -16,7 +16,10 @@ export class InventoryService {
     const newInventory = this.inventoryRepository.create({
       quantity: createInventoryDto.quantity,
       product: { id: createInventoryDto.productId },
-      rack: { id: createInventoryDto.rackId }
+      rack: { id: createInventoryDto.rackId },
+      lotNumber: createInventoryDto.lotNumber,
+      productionDate: createInventoryDto.productionDate,
+      expirationDate: createInventoryDto.expirationDate
     });
 
     return await this.inventoryRepository.save(newInventory);
@@ -24,7 +27,7 @@ export class InventoryService {
 
   findAll() {
     return this.inventoryRepository.find({
-      relations: ['product', 'rack'] // İlişkili verileri de getirmesi için eklendi
+      relations: ['product', 'rack']
     });
   }
 

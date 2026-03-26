@@ -1,17 +1,18 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsNumber, IsDateString } from 'class-validator';
+import { IsUUID, IsInt, IsOptional, IsString, IsDateString, Min } from 'class-validator';
 
-export class CreateInventoryDto {
-    @ApiProperty({ description: 'Stoka eklenecek ürünün ID değeri' })
-    @IsString()
+export class CreateReceivingDto {
+    @ApiProperty({ description: 'Mal kabul yapılacak ürünün ID değeri (UUID)' })
+    @IsUUID()
     productId: string;
 
-    @ApiProperty({ description: 'Ürünün yerleştirileceği rafın ID değeri' })
-    @IsString()
+    @ApiProperty({ description: 'Ürünün yerleştirileceği rafın ID değeri (UUID)' })
+    @IsUUID()
     rackId: string;
 
-    @ApiProperty({ description: 'Miktar', example: 100 })
-    @IsNumber()
+    @ApiProperty({ description: 'Gelen ürün adedi', example: 100 })
+    @IsInt()
+    @Min(1)
     quantity: number;
 
     @ApiPropertyOptional({ description: 'Parti/Lot Numarası', example: 'LOT-2026-001' })
@@ -22,10 +23,10 @@ export class CreateInventoryDto {
     @ApiPropertyOptional({ description: 'Üretim Tarihi (YYYY-MM-DD)', example: '2024-01-15' })
     @IsOptional()
     @IsDateString()
-    productionDate?: Date;
+    productionDate?: string;
 
     @ApiPropertyOptional({ description: 'Son Kullanma Tarihi (YYYY-MM-DD)', example: '2026-12-31' })
     @IsOptional()
     @IsDateString()
-    expirationDate?: Date;
+    expirationDate?: string;
 }

@@ -19,6 +19,8 @@ import { join } from 'path';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { CategoryModule } from './category/category.module';
 import { OrderModule } from './order/order.module';
+import { ReceivingModule } from './receiving/receiving.module';
+import { ShippingModule } from './shipping/shipping.module';
 
 @Module({
   imports: [
@@ -54,6 +56,8 @@ import { OrderModule } from './order/order.module';
     DashboardModule,
     CategoryModule,
     OrderModule,
+    ReceivingModule,
+    ShippingModule,
   ],
   controllers: [AppController],
   providers: [AppService],
