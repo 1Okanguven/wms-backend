@@ -58,6 +58,14 @@ export class ShippingService {
             movement.product = { id: dto.productId } as any;
             movement.sourceRack = { id: dto.rackId } as any;
             movement.user = { id: userId } as any;
+            movement.destination = dto.destination ?? null;
+            movement.shipmentType = dto.shipmentType;
+            movement.customerName = dto.customerName ?? null;
+            movement.deliveryAddress = dto.deliveryAddress ?? null;
+            movement.shippingCompany = dto.shippingCompany ?? null;
+            movement.trackingNumber = dto.trackingNumber ?? null;
+            movement.targetWarehouse = dto.targetWarehouseId ? { id: dto.targetWarehouseId } as any : null;
+            movement.referenceNumber = dto.referenceNumber ?? null;
             await queryRunner.manager.save(Movement, movement);
 
             // --- ADIM 4: Commit ---
