@@ -29,4 +29,9 @@ export class CreateReceivingDto {
     @IsOptional()
     @IsDateString()
     expirationDate?: string;
+
+    @ApiPropertyOptional({ description: 'İç transfer ID değeri (Internal transfer için)' })
+    @IsOptional()
+    @IsUUID()
+    transferId?: string;
 }

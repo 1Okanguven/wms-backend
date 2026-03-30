@@ -27,7 +27,14 @@ export class InventoryService {
 
   findAll() {
     return this.inventoryRepository.find({
-      relations: ['product', 'rack']
+      relations: [
+        'product', 
+        'rack', 
+        'rack.aisle', 
+        'rack.aisle.zone', 
+        'rack.aisle.zone.warehouse', 
+        'rack.aisle.zone.warehouse.branch'
+      ]
     });
   }
 

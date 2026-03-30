@@ -21,6 +21,7 @@ import { CategoryModule } from './category/category.module';
 import { OrderModule } from './order/order.module';
 import { ReceivingModule } from './receiving/receiving.module';
 import { ShippingModule } from './shipping/shipping.module';
+import { TransferModule } from './transfer/transfer.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { ShippingModule } from './shipping/shipping.module';
     OrderModule,
     ReceivingModule,
     ShippingModule,
+    TransferModule,
   ],
   controllers: [AppController],
   providers: [AppService],

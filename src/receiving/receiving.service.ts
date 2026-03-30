@@ -53,7 +53,15 @@ export class ReceivingService {
             movement.user = { id: userId } as any;
             await queryRunner.manager.save(Movement, movement);
 
-            // --- ADIM 3: Commit ---
+            // --- ADIM 3: Eğer bir Transfer üzerinden geliyorsa statüsünü güncelle ---
+            if (dto.transferId) {
+                await queryRunner.manager.update('Transfer', 
+                    { id: dto.transferId }, 
+                    { status: 'COMPLETED' }
+                );
+            }
+
+            // --- ADIM 4: Commit ---
             await queryRunner.commitTransaction();
 
             return {
@@ -61,6 +69,7 @@ export class ReceivingService {
                 quantity: dto.quantity,
                 productId: dto.productId,
                 rackId: dto.rackId,
+                transferId: dto.transferId || null,
             };
         } catch (error) {
             await queryRunner.rollbackTransaction();

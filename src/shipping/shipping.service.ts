@@ -68,7 +68,38 @@ export class ShippingService {
             movement.referenceNumber = dto.referenceNumber ?? null;
             await queryRunner.manager.save(Movement, movement);
 
-            // --- ADIM 4: Commit ---
+            // --- ADIM 4: İç Transfer (Internal Transfer) Kaydı ---
+            if (dto.shipmentType === 'INTERNAL' && dto.targetWarehouseId) {
+                // Kaynak depoyu bul (Raf -> Aisle -> Zone -> Warehouse)
+                const inventoryWithRelations = await queryRunner.manager.findOne(Inventory, {
+                    where: { id: inventory.id },
+                    relations: ['rack', 'rack.aisle', 'rack.aisle.zone', 'rack.aisle.zone.warehouse'],
+                });
+
+                const sourceWarehouse = inventoryWithRelations?.rack?.aisle?.zone?.warehouse;
+
+                if (sourceWarehouse) {
+                    const transfer = {
+                        product: { id: dto.productId },
+                        quantity: dto.quantity,
+                        sourceWarehouse: { id: sourceWarehouse.id },
+                        targetWarehouse: { id: dto.targetWarehouseId },
+                        status: 'PENDING',
+                        referenceNumber: dto.referenceNumber || null,
+                        lotNumber: inventoryWithRelations.lotNumber || null,
+                        productionDate: inventoryWithRelations.productionDate || null,
+                        expirationDate: inventoryWithRelations.expirationDate || null,
+                    };
+                    
+                    console.log(`[ShippingService] Internal Transfer oluşturuluyor: Lot: ${transfer.lotNumber}, Prod: ${transfer.productionDate}, Exp: ${transfer.expirationDate}`);
+                    
+                    // Not: Bu aşamada 'Transfer' entity'si manager üzerinden kaydedilir.
+                    // Entity tipini belirtmek için string veya sınıf kullanılabilir.
+                    await queryRunner.manager.save('Transfer', transfer);
+                }
+            }
+
+            // --- ADIM 5: Commit ---
             await queryRunner.commitTransaction();
 
             return {
