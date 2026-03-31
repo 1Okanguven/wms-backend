@@ -28,6 +28,19 @@ export class WarehouseService {
     });
   }
 
+  async findShippable() {
+    return await this.warehouseRepository
+      .createQueryBuilder('warehouse')
+      .innerJoin('warehouse.zones', 'zone')
+      .innerJoin('zone.aisles', 'aisle')
+      .innerJoin('aisle.racks', 'rack')
+      .leftJoinAndSelect('warehouse.branch', 'branch')
+      .leftJoinAndSelect('branch.company', 'company')
+      .select(['warehouse', 'branch', 'company'])
+      .groupBy('warehouse.id, branch.id, company.id')
+      .getMany();
+  }
+
   async findOne(id: string) {
     const warehouse = await this.warehouseRepository.findOneBy({ id });
     if (!warehouse) {

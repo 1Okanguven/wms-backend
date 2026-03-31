@@ -109,9 +109,7 @@ export class DashboardService {
         return workbook.xlsx.writeBuffer() as unknown as Promise<Buffer>;
     }
 
-    // Mevcut exportLowStockAlerts() metodunun hemen altına bu yeni metodu ekle:
     async exportLowStockAlertsPdf(): Promise<Buffer> {
-        // 1. Veriyi çekiyoruz (Excel metodundaki ile birebir aynı sorgu)
         const lowStockProducts = await this.inventoryRepository
             .createQueryBuilder('inventory')
             .leftJoin('inventory.product', 'product')
@@ -124,15 +122,11 @@ export class DashboardService {
             .having('SUM(inventory.quantity) < :limit', { limit: 20 })
             .getRawMany();
 
-        // 2. PDF oluşturma işlemini bir Promise içine alıyoruz ki Buffer tamamen dolana kadar beklesin
         return new Promise((resolve, reject) => {
             const doc = new PDFDocument({ margin: 50 });
             const buffers: Buffer[] = [];
-
-            // PDF verisi oluştukça buffers dizisine ekle
             doc.on('data', buffers.push.bind(buffers));
 
-            // İşlem bittiğinde dizideki tüm parçaları tek bir Buffer yap ve resolve et
             doc.on('end', () => {
                 const pdfData = Buffer.concat(buffers);
                 resolve(pdfData);
@@ -163,7 +157,6 @@ export class DashboardService {
                 doc.moveDown(0.5);
             });
 
-            // PDF'i sonlandır (Bu tetiklendiğinde yukarıdaki doc.on('end') çalışır)
             doc.end();
         });
     }

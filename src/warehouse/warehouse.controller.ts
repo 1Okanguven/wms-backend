@@ -25,6 +25,11 @@ export class WarehouseController {
     return this.warehouseService.findAll();
   }
 
+  @Get('shippable')
+  findShippable() {
+    return this.warehouseService.findShippable();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.warehouseService.findOne(id);

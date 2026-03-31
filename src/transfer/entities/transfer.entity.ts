@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from 'typeorm';
 import { Product } from '../../product/entities/product.entity';
 import { Warehouse } from '../../warehouse/entities/warehouse.entity';
+import { Rack } from '../../rack/entities/rack.entity';
 
 export enum TransferStatus {
     PENDING = 'PENDING',
@@ -40,6 +41,9 @@ export class Transfer {
 
     @ManyToOne(() => Warehouse, { onDelete: 'CASCADE' })
     sourceWarehouse: Warehouse;
+    
+    @ManyToOne(() => Rack, { nullable: true, onDelete: 'SET NULL' })
+    sourceRack: Rack;
 
     @ManyToOne(() => Warehouse, { onDelete: 'CASCADE' })
     targetWarehouse: Warehouse;

@@ -27,7 +27,6 @@ export class MovementService {
         await this.increaseStock(queryRunner.manager, createMovementDto.productId, createMovementDto.destinationRackId, createMovementDto.quantity);
       }
 
-      // OUT ve yeni eklediğimiz SHIPMENT tipleri aynı mantıkla raftan stok düşürür
       if (createMovementDto.type === MovementType.OUT || createMovementDto.type === MovementType.SHIPMENT) {
         if (!createMovementDto.sourceRackId) throw new BadRequestException(`${createMovementDto.type} işlemi için kaynak raf zorunludur.`);
         await this.decreaseStock(queryRunner.manager, createMovementDto.productId, createMovementDto.sourceRackId, createMovementDto.quantity);
@@ -44,7 +43,7 @@ export class MovementService {
       const newMovement = queryRunner.manager.create(Movement, {
         type: createMovementDto.type,
         quantity: createMovementDto.quantity,
-        referenceNumber: createMovementDto.referenceNumber, // Yeni eklenen referans numarası
+        referenceNumber: createMovementDto.referenceNumber,
         product: { id: createMovementDto.productId },
         sourceRack: createMovementDto.sourceRackId ? { id: createMovementDto.sourceRackId } : undefined,
         destinationRack: createMovementDto.destinationRackId ? { id: createMovementDto.destinationRackId } : undefined,
@@ -113,9 +112,6 @@ export class MovementService {
   }
 
   async update(id: string, updateMovementDto: UpdateMovementDto) {
-    // Hatırlatma: Movement (Hareket) kayıtları yasal loglar olduğu için 
-    // gerçek sistemlerde UPDATE edilmezler. Ancak şu an test/geliştirme aşamasında olduğumuz için
-    // preload mantığını koruyoruz.
     const updateData: any = { ...updateMovementDto };
 
     for (const key of Object.keys(updateData)) {

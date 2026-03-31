@@ -4,6 +4,7 @@ import { DataSource, Repository } from 'typeorm';
 import { CreateShippingDto } from './dto/create-shipping.dto';
 import { Inventory } from '../inventory/entities/inventory.entity';
 import { Movement, MovementType } from '../movement/entities/movement.entity';
+import { Warehouse } from '../warehouse/entities/warehouse.entity';
 
 @Injectable()
 export class ShippingService {
@@ -13,7 +14,7 @@ export class ShippingService {
         @InjectRepository(Movement)
         private readonly movementRepository: Repository<Movement>,
         private readonly dataSource: DataSource,
-    ) {}
+    ) { }
 
     async ship(dto: CreateShippingDto, userId: string) {
         const queryRunner = this.dataSource.createQueryRunner();
@@ -21,6 +22,23 @@ export class ShippingService {
         await queryRunner.startTransaction();
 
         try {
+            // --- ADIM 0: Hedef Depo Raf Kontrolü (Sadece INTERNAL için) ---
+            if (dto.shipmentType === 'INTERNAL' && dto.targetWarehouseId) {
+                const targetWhWithRacks = await queryRunner.manager
+                    .createQueryBuilder(Warehouse, 'warehouse')
+                    .innerJoin('warehouse.zones', 'zone')
+                    .innerJoin('zone.aisles', 'aisle')
+                    .innerJoin('aisle.racks', 'rack')
+                    .where('warehouse.id = :id', { id: dto.targetWarehouseId })
+                    .getOne();
+
+                if (!targetWhWithRacks) {
+                    throw new BadRequestException(
+                        'Hedef deponun fiziksel kurulumu (raf) yapılmamış. Rafı olmayan bir depoya sevkiyat gerçekleştirilemez.',
+                    );
+                }
+            }
+
             // --- ADIM 1: Mevcut stok kaydını bul ---
             const inventory = await queryRunner.manager.findOne(Inventory, {
                 where: {
@@ -83,6 +101,7 @@ export class ShippingService {
                         product: { id: dto.productId },
                         quantity: dto.quantity,
                         sourceWarehouse: { id: sourceWarehouse.id },
+                        sourceRack: { id: dto.rackId },
                         targetWarehouse: { id: dto.targetWarehouseId },
                         status: 'PENDING',
                         referenceNumber: dto.referenceNumber || null,
@@ -90,11 +109,9 @@ export class ShippingService {
                         productionDate: inventoryWithRelations.productionDate || null,
                         expirationDate: inventoryWithRelations.expirationDate || null,
                     };
-                    
-                    console.log(`[ShippingService] Internal Transfer oluşturuluyor: Lot: ${transfer.lotNumber}, Prod: ${transfer.productionDate}, Exp: ${transfer.expirationDate}`);
-                    
-                    // Not: Bu aşamada 'Transfer' entity'si manager üzerinden kaydedilir.
-                    // Entity tipini belirtmek için string veya sınıf kullanılabilir.
+
+                    console.log(`[ShippingService] Internal Transfer oluşturuluyor: Lot: ${transfer.lotNumber}, Prod: ${transfer.productionDate}, Exp: ${transfer.expirationDate}, SourceRack: ${dto.rackId}`);
+
                     await queryRunner.manager.save('Transfer', transfer);
                 }
             }

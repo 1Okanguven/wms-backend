@@ -9,6 +9,7 @@ export enum MovementType {
     OUT = 'OUT',           // Fire / Hasar Çıkışı
     SHIPMENT = 'SHIPMENT', // Müşteriye Sevkiyat
     TRANSFER = 'TRANSFER', // Depo İçi Transfer
+    RETURN = 'RETURN',     // İptal / İade
 }
 
 @Entity('movements')
