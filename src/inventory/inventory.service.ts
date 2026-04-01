@@ -76,4 +76,19 @@ export class InventoryService {
     const inventory = await this.findOne(id);
     return await this.inventoryRepository.remove(inventory);
   }
+
+  async findByWarehouse(warehouseId: string) {
+    return await this.inventoryRepository.find({
+      where: {
+        rack: {
+          aisle: {
+            zone: {
+              warehouse: { id: warehouseId }
+            }
+          }
+        }
+      },
+      relations: ['product', 'rack', 'rack.aisle', 'rack.aisle.zone', 'rack.aisle.zone.warehouse']
+    });
+  }
 }

@@ -19,6 +19,11 @@ export class CreateOrderDto {
   @IsNotEmpty()
   customerName: string;
 
+  @ApiProperty({ description: 'Hangi Şube/Depo üzerinden karşılanacak' })
+  @IsUUID()
+  @IsNotEmpty()
+  warehouseId: string;
+
   @ApiProperty({ type: [OrderItemDto], description: 'Siparişteki ürünler listesi' })
   @IsArray()
   @ValidateNested({ each: true })

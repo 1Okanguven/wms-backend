@@ -36,6 +36,11 @@ export class InventoryController {
     return this.inventoryService.update(id, updateInventoryDto);
   }
 
+  @Get('warehouse/:warehouseId')
+  findByWarehouse(@Param('warehouseId') warehouseId: string) {
+    return this.inventoryService.findByWarehouse(warehouseId);
+  }
+
   @Delete(':id')
   @Roles(UserRole.ADMIN)
   remove(@Param('id') id: string) {

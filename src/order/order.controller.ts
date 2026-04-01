@@ -18,28 +18,41 @@ export class OrderController {
 
   @Post()
   @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Yeni Sipariş Oluşturur (İşlemler Transaction içindedir)' })
+  @ApiOperation({ summary: 'Yeni Sipariş Oluşturur (Akıllı Stok Eşleştirme ve PickList dahil)' })
   createOrder(@Body() createOrderDto: CreateOrderDto) {
     return this.orderService.createOrder(createOrderDto);
   }
 
-  @Post('assign-pick-list')
-  @Roles(UserRole.ADMIN)
-  @ApiOperation({ summary: 'Siparişi bir Depo Görevlisine atar ve PickList oluşturur' })
-  assignPickList(@Body() assignPickListDto: AssignPickListDto) {
-    return this.orderService.assignPickList(assignPickListDto);
-  }
-
-  @Patch('pick-list/:id/complete')
+  @Post('pick-list/:id/complete')
   @Roles(UserRole.ADMIN, UserRole.WORKER)
-  @ApiOperation({ summary: 'Toplama listesini (PickList) tamamlandı olarak işaretler, stok düşer ve hareket kaydeder' })
+  @ApiOperation({ summary: 'Toplama listesini tamamlar ve stok düşer' })
   completePickList(
     @Param('id') pickListId: string,
-    @Body() completeDto: CompletePickListDto,
     @Req() req: any
   ) {
     const userId = req.user.userId || req.user.id;
-    return this.orderService.completePickList(pickListId, completeDto, userId);
+    return this.orderService.completePickList(pickListId, userId);
+  }
+
+  @Post('all') // findall
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Tüm siparişleri listeler' })
+  findAll() {
+    return this.orderService.findAll();
+  }
+
+  @Post('pick-lists')
+  @Roles(UserRole.ADMIN, UserRole.WORKER)
+  @ApiOperation({ summary: 'Tüm toplama listelerini getirir' })
+  getAllPickLists() {
+    return this.orderService.getAllPickLists();
+  }
+
+  @Post('pick-lists/warehouse/:warehouseId')
+  @Roles(UserRole.ADMIN, UserRole.WORKER)
+  @ApiOperation({ summary: 'Depo bazlı toplama listelerini getirir' })
+  findPickListsByWarehouse(@Param('warehouseId') warehouseId: string) {
+    return this.orderService.findPickListsByWarehouse(warehouseId);
   }
 }
 

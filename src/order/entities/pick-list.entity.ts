@@ -1,7 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn, JoinColumn } from 'typeorm';
 import { PickListStatus } from '../enums/pick-list-status.enum';
 import { Order } from './order.entity';
 import { User } from '../../user/entities/user.entity';
+import { PickItem } from './pick-item.entity';
 
 @Entity('pick_lists')
 export class PickList {
@@ -12,10 +13,21 @@ export class PickList {
   status: PickListStatus;
 
   @ManyToOne(() => Order, (order) => order.pickLists)
+  @JoinColumn({ name: 'orderId' })
   order: Order;
 
-  @ManyToOne(() => User)
+  @Column()
+  orderId: string;
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'assignedWorkerId' })
   assignedWorker: User;
+
+  @Column({ nullable: true })
+  assignedWorkerId: string;
+
+  @OneToMany(() => PickItem, (item) => item.pickList, { cascade: true })
+  items: PickItem[];
 
   @CreateDateColumn()
   createdAt: Date;
