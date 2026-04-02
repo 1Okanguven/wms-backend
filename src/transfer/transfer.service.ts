@@ -60,7 +60,7 @@ export class TransferService {
                 throw new BadRequestException(`Transferin kaynak raf bilgisi eksik, otomatik iade yapılamaz.`);
             }
 
-            // 1. Ürünü kaynak rafa geri iade et
+
             let inventory = await queryRunner.manager.findOne(Inventory, {
                 where: {
                     product: { id: transfer.product.id },
@@ -84,12 +84,12 @@ export class TransferService {
                 await queryRunner.manager.save(Inventory, inventory);
             }
 
-            // 2. Transfer durumunu güncelle
+
             await queryRunner.manager.update(Transfer, transfer.id, { 
                 status: TransferStatus.CANCELLED 
             });
 
-            // 3. Stok Hareketi (Movement) logu at
+
             const movementData = {
                 type: MovementType.RETURN,
                 quantity: transfer.quantity,
@@ -100,7 +100,7 @@ export class TransferService {
                 referenceNumber: transfer.referenceNumber,
             };
             
-            // Note: save() yerine insert() kullanarak UpdateValuesMissingError hatasından kaçınıyoruz.
+
             await queryRunner.manager.insert(Movement, movementData);
 
             await queryRunner.commitTransaction();

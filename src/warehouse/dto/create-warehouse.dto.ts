@@ -7,6 +7,11 @@ export class CreateWarehouseDto {
     @IsNotEmpty()
     name: string;
 
+    @ApiPropertyOptional({ description: 'Depo Kodu', example: 'ANT' })
+    @IsString()
+    @IsOptional()
+    code?: string;
+
     @ApiPropertyOptional({ description: 'Depo Tipi', example: 'Soğuk Hava' })
     @IsString()
     @IsOptional()

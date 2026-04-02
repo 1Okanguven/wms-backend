@@ -34,7 +34,7 @@ export class OrderController {
     return this.orderService.completePickList(pickListId, userId);
   }
 
-  @Post('all') // findall
+  @Post('all')
   @Roles(UserRole.ADMIN)
   @ApiOperation({ summary: 'Tüm siparişleri listeler' })
   findAll() {

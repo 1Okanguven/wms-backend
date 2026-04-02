@@ -21,7 +21,7 @@ export class ReceivingService {
         await queryRunner.startTransaction();
 
         try {
-            // --- ADIM 1: Inventory güncelle ya da oluştur ---
+
             const existingInventory = await queryRunner.manager.findOne(Inventory, {
                 where: {
                     product: { id: dto.productId },
@@ -44,7 +44,7 @@ export class ReceivingService {
                 await queryRunner.manager.save(Inventory, newInventory);
             }
 
-            // --- ADIM 2: Movement (Stok Hareketi) logu oluştur ---
+
             const movement = new Movement();
             movement.type = MovementType.IN;
             movement.quantity = dto.quantity;
@@ -53,7 +53,7 @@ export class ReceivingService {
             movement.user = { id: userId } as any;
             await queryRunner.manager.save(Movement, movement);
 
-            // --- ADIM 3: Eğer bir Transfer üzerinden geliyorsa statüsünü güncelle ---
+
             if (dto.transferId) {
                 await queryRunner.manager.update('Transfer', 
                     { id: dto.transferId }, 
@@ -61,7 +61,7 @@ export class ReceivingService {
                 );
             }
 
-            // --- ADIM 4: Commit ---
+
             await queryRunner.commitTransaction();
 
             return {

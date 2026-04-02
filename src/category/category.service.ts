@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Not } from 'typeorm';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { Category } from './entities/category.entity';
@@ -37,6 +37,16 @@ export class CategoryService {
         const relationName = key.slice(0, -2);
         updateData[relationName] = { id: updateData[key] };
         delete updateData[key];
+      }
+    }
+
+    if (updateData.name) {
+      const existing = await this.categoryRepository.findOneBy({
+        name: updateData.name,
+        id: Not(id)
+      });
+      if (existing) {
+        throw new ConflictException(`'${updateData.name}' isimli kategori zaten mevcut.`);
       }
     }
 

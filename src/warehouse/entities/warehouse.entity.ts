@@ -10,6 +10,9 @@ export class Warehouse {
     @Column({ type: 'varchar', length: 100 })
     name: string;
 
+    @Column({ type: 'varchar', length: 20, unique: true, nullable: true })
+    code: string;
+
     @Column({ type: 'varchar', length: 50, nullable: true })
     type: string;
 

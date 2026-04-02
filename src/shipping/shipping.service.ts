@@ -22,7 +22,7 @@ export class ShippingService {
         await queryRunner.startTransaction();
 
         try {
-            // --- ADIM 0: Hedef Depo Raf Kontrolü (Sadece INTERNAL için) ---
+
             if (dto.shipmentType === 'INTERNAL' && dto.targetWarehouseId) {
                 const targetWhWithRacks = await queryRunner.manager
                     .createQueryBuilder(Warehouse, 'warehouse')
@@ -39,7 +39,7 @@ export class ShippingService {
                 }
             }
 
-            // --- ADIM 1: Mevcut stok kaydını bul ---
+
             const inventory = await queryRunner.manager.findOne(Inventory, {
                 where: {
                     product: { id: dto.productId },
@@ -59,17 +59,17 @@ export class ShippingService {
                 );
             }
 
-            // --- ADIM 2: Stok miktarını düş ---
+
             inventory.quantity -= dto.quantity;
 
             if (inventory.quantity === 0) {
-                // Miktar sıfıra düşerse kaydı sil
+
                 await queryRunner.manager.remove(Inventory, inventory);
             } else {
                 await queryRunner.manager.save(Inventory, inventory);
             }
 
-            // --- ADIM 3: Movement (Stok Hareketi) logu oluştur ---
+
             const movement = new Movement();
             movement.type = MovementType.SHIPMENT;
             movement.quantity = dto.quantity;
@@ -86,9 +86,9 @@ export class ShippingService {
             movement.referenceNumber = dto.referenceNumber ?? null;
             await queryRunner.manager.save(Movement, movement);
 
-            // --- ADIM 4: İç Transfer (Internal Transfer) Kaydı ---
+
             if (dto.shipmentType === 'INTERNAL' && dto.targetWarehouseId) {
-                // Kaynak depoyu bul (Raf -> Aisle -> Zone -> Warehouse)
+
                 const inventoryWithRelations = await queryRunner.manager.findOne(Inventory, {
                     where: { id: inventory.id },
                     relations: ['rack', 'rack.aisle', 'rack.aisle.zone', 'rack.aisle.zone.warehouse'],
@@ -116,7 +116,7 @@ export class ShippingService {
                 }
             }
 
-            // --- ADIM 5: Commit ---
+
             await queryRunner.commitTransaction();
 
             return {

@@ -21,7 +21,7 @@ export class Product {
     @JoinColumn({ name: 'categoryId' })
     category: Category;
 
-    // YENİ EKLENENLER: Ölçü Birimi ve SKT Takibi
+
     @Column({ type: 'varchar', length: 50, default: 'ADET' })
     unit: string;
 

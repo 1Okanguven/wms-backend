@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Not } from 'typeorm';
 import { CreateWarehouseDto } from './dto/create-warehouse.dto';
 import { UpdateWarehouseDto } from './dto/update-warehouse.dto';
 import { Warehouse } from './entities/warehouse.entity';
@@ -13,9 +13,21 @@ export class WarehouseService {
   ) { }
 
   async create(createWarehouseDto: CreateWarehouseDto) {
-    const { branchId, ...rest } = createWarehouseDto;
+    const { branchId, code, ...rest } = createWarehouseDto;
+    
+    let warehouseCode = code;
+    if (!warehouseCode) {
+      warehouseCode = createWarehouseDto.name.substring(0, 3).toUpperCase();
+    }
+
+    const existing = await this.warehouseRepository.findOneBy({ code: warehouseCode });
+    if (existing) {
+      throw new ConflictException(`'${warehouseCode}' kodlu depo zaten mevcut. Lütfen farklı bir kod giriniz.`);
+    }
+
     const newWarehouse = this.warehouseRepository.create({
       ...rest,
+      code: warehouseCode,
       branch: { id: branchId }
     });
 
@@ -57,6 +69,26 @@ export class WarehouseService {
         const relationName = key.slice(0, -2);
         updateData[relationName] = { id: updateData[key] };
         delete updateData[key];
+      }
+    }
+
+    if (updateData.name && !updateData.code) {
+      const existingName = await this.warehouseRepository.findOneBy({
+        name: updateData.name,
+        id: Not(id)
+      });
+      if (existingName) {
+        throw new ConflictException(`'${updateData.name}' isimli depo zaten mevcut.`);
+      }
+    }
+
+    if (updateData.code) {
+      const existingCode = await this.warehouseRepository.findOneBy({
+        code: updateData.code,
+        id: Not(id)
+      });
+      if (existingCode) {
+        throw new ConflictException(`'${updateData.code}' kodlu depo zaten mevcut.`);
       }
     }
 

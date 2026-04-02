@@ -60,16 +60,18 @@ export class OrderService {
     await queryRunner.startTransaction();
 
     try {
-      // 1. Siparişi Oluştur
+
       const order = queryRunner.manager.create(Order, {
         customerName: createOrderDto.customerName,
         orderNumber: `ORD-${Date.now().toString().slice(-6)}`,
         warehouseId: createOrderDto.warehouseId,
-        status: OrderStatus.PICKING, // Otomatik toplama listesi oluştuğu için direkt PICKING
+        orderNote: createOrderDto.orderNote,
+
+        status: OrderStatus.PICKING, 
       });
       const savedOrder = await queryRunner.manager.save(order);
 
-      // 2. Sipariş Kalemlerini ve Toplama Listesini Hazırla
+
       const pickList = queryRunner.manager.create(PickList, {
         orderId: savedOrder.id,
         status: PickListStatus.PENDING,
@@ -78,7 +80,7 @@ export class OrderService {
       const pickItems: PickItem[] = [];
 
       for (const itemDto of createOrderDto.items) {
-        // Sipariş kalemi
+
         const orderItem = queryRunner.manager.create(OrderItem, {
           order: savedOrder,
           product: { id: itemDto.productId },
@@ -86,7 +88,7 @@ export class OrderService {
         });
         const savedOrderItem = await queryRunner.manager.save(orderItem);
 
-        // 3. AKILLI STOK EŞLEŞTİRME (SMART PICKING - FIFO)
+
         const inventories = await queryRunner.manager.find(Inventory, {
           where: {
             product: { id: itemDto.productId },

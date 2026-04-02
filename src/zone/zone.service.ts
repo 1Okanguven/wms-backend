@@ -1,22 +1,46 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Not } from 'typeorm';
 import { CreateZoneDto } from './dto/create-zone.dto';
 import { UpdateZoneDto } from './dto/update-zone.dto';
 import { Zone } from './entities/zone.entity';
+
+import { Warehouse } from '../warehouse/entities/warehouse.entity';
 
 @Injectable()
 export class ZoneService {
   constructor(
     @InjectRepository(Zone)
     private readonly zoneRepository: Repository<Zone>,
+    @InjectRepository(Warehouse)
+    private readonly warehouseRepository: Repository<Warehouse>,
   ) { }
 
   async create(createZoneDto: CreateZoneDto) {
+    const warehouse = await this.warehouseRepository.findOneBy({ id: createZoneDto.warehouseId });
+    if (!warehouse) {
+      throw new NotFoundException(`Depo bulunamadı.`);
+    }
+
+    const { name, code, type, warehouseId } = createZoneDto;
+
+
+    const existing = await this.zoneRepository.findOneBy({
+      code: code.toUpperCase(),
+      warehouse: { id: warehouseId }
+    });
+    if (existing) {
+      throw new ConflictException(`Bu depoda '${code}' kodlu bölge zaten mevcut.`);
+    }
+
+    const locationCode = `${warehouse.code}-${code.toUpperCase()}`;
+
     const newZone = this.zoneRepository.create({
-      name: createZoneDto.name,
-      type: createZoneDto.type,
-      warehouse: { id: createZoneDto.warehouseId }
+      name,
+      code: code.toUpperCase(),
+      locationCode,
+      type,
+      warehouse: { id: warehouseId }
     });
 
     return await this.zoneRepository.save(newZone);
@@ -40,24 +64,47 @@ export class ZoneService {
   }
 
   async update(id: string, updateZoneDto: UpdateZoneDto) {
-    const updateData: any = { ...updateZoneDto };
+    const zone = await this.findOne(id);
+    const { name, code, type, warehouseId } = updateZoneDto;
 
-    for (const key of Object.keys(updateData)) {
-      if (key !== 'id' && key.endsWith('Id')) {
-        const relationName = key.slice(0, -2);
-        updateData[relationName] = { id: updateData[key] };
-        delete updateData[key];
+
+    const targetCode = code ? code.toUpperCase() : zone.code;
+    const targetWarehouseId = warehouseId || zone.warehouse?.id;
+
+    if (code || warehouseId) {
+      const existing = await this.zoneRepository.findOne({
+        where: {
+          code: targetCode,
+          warehouse: { id: targetWarehouseId },
+          id: Not(id)
+        }
+      });
+      if (existing) {
+        throw new ConflictException(`Bu depoda '${targetCode}' kodlu bölge zaten mevcut.`);
       }
     }
 
-    const zone = await this.zoneRepository.preload({
-      id,
-      ...updateData,
-    });
 
-    if (!zone) {
-      throw new NotFoundException(`ID'si ${id} olan alan (zone) güncellenemedi, bulunamadı.`);
+    const warehouse = warehouseId 
+      ? await this.warehouseRepository.findOne({ where: { id: warehouseId } })
+      : zone.warehouse;
+
+    if (!warehouse) {
+      throw new NotFoundException(`Depo bulunamadı.`);
     }
+
+
+    const updatedName = name || zone.name;
+    const updatedCode = targetCode;
+    const updatedLocationCode = `${warehouse.code}-${updatedCode}`;
+
+    Object.assign(zone, {
+      ...updateZoneDto,
+      name: updatedName,
+      code: updatedCode,
+      locationCode: updatedLocationCode,
+      warehouse
+    });
 
     return await this.zoneRepository.save(zone);
   }

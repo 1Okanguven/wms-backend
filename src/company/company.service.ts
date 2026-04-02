@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Not } from 'typeorm';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
 import { Company } from './entities/company.entity';
@@ -37,6 +37,16 @@ export class CompanyService {
         const relationName = key.slice(0, -2);
         updateData[relationName] = { id: updateData[key] };
         delete updateData[key];
+      }
+    }
+
+    if (updateData.name) {
+      const existing = await this.companyRepository.findOneBy({
+        name: updateData.name,
+        id: Not(id)
+      });
+      if (existing) {
+        throw new ConflictException(`'${updateData.name}' isimli şirket zaten mevcut.`);
       }
     }
 

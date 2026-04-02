@@ -15,6 +15,9 @@ export class Order {
   @Column({ nullable: true })
   customerName: string;
 
+  @Column({ type: 'text', nullable: true })
+  orderNote: string;
+
   @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.PENDING })
   status: OrderStatus;
 

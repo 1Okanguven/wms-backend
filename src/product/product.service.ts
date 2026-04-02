@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike } from 'typeorm';
+import { Repository, ILike, Not } from 'typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './entities/product.entity';
@@ -21,9 +21,9 @@ export class ProductService {
     const newProduct = this.productRepository.create({
       ...createProductDto,
       barcode: generatedBarcode,
-      // Kategori ilişkisini bağlamıştık:
+
       category: { id: createProductDto.categoryId },
-      // İŞTE UNUTTUĞUMUZ SATIR: Şirket ilişkisini de bağlamamız gerekiyor!
+
       company: { id: createProductDto.companyId },
     });
 
@@ -35,8 +35,7 @@ export class ProductService {
 
     const queryBuilder = this.productRepository.createQueryBuilder('product');
 
-    // İŞTE EKSİK OLAN SİHİRLİ SATIR BURASI:
-    // Ürünleri çekerken, ilişkili olduğu kategori tablosunu da JSON içine dahil ediyoruz
+
     queryBuilder.leftJoinAndSelect('product.category', 'category');
 
     queryBuilder.leftJoinAndSelect('product.company', 'company');
@@ -78,6 +77,26 @@ export class ProductService {
         const relationName = key.slice(0, -2);
         updateData[relationName] = { id: updateData[key] };
         delete updateData[key];
+      }
+    }
+
+    if (updateData.sku) {
+      const existingSku = await this.productRepository.findOneBy({
+        sku: updateData.sku,
+        id: Not(id)
+      });
+      if (existingSku) {
+        throw new ConflictException(`'${updateData.sku}' SKU numarası başka bir ürüne ait.`);
+      }
+    }
+
+    if (updateData.barcode) {
+      const existingBarcode = await this.productRepository.findOneBy({
+        barcode: updateData.barcode,
+        id: Not(id)
+      });
+      if (existingBarcode) {
+        throw new ConflictException(`'${updateData.barcode}' barkodu başka bir ürüne ait.`);
       }
     }
 

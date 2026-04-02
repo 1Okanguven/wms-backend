@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
-import { Product } from '../../product/entities/product.entity'; // Ürün tablosunu bağlıyoruz
+import { Product } from '../../product/entities/product.entity';
 
 @Entity('categories')
 export class Category {
@@ -7,12 +7,12 @@ export class Category {
     id: string;
 
     @Column({ unique: true })
-    name: string; // Örn: Elektronik, Kırtasiye
+    name: string;
 
     @Column({ nullable: true })
     description: string;
 
-    // İLİŞKİ: Bir kategorinin birden fazla ürünü olabilir (One-to-Many)
+
     @OneToMany(() => Product, (product) => product.category)
     products: Product[];
 

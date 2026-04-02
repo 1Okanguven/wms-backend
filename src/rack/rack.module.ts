@@ -3,9 +3,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { RackService } from './rack.service';
 import { RackController } from './rack.controller';
 import { Rack } from './entities/rack.entity';
+import { Aisle } from '../aisle/entities/aisle.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Rack])],
+  imports: [TypeOrmModule.forFeature([Rack, Aisle])],
   controllers: [RackController],
   providers: [RackService],
 })

@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty, IsString, IsUUID, Min, ValidateNested } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString, IsUUID, Min, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -18,6 +18,11 @@ export class CreateOrderDto {
   @IsString()
   @IsNotEmpty()
   customerName: string;
+
+  @ApiProperty({ description: 'Sipariş Notu (Opsiyonel)', required: false })
+  @IsString()
+  @IsOptional()
+  orderNote?: string;
 
   @ApiProperty({ description: 'Hangi Şube/Depo üzerinden karşılanacak' })
   @IsUUID()

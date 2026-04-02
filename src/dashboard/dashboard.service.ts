@@ -66,7 +66,7 @@ export class DashboardService {
     }
 
 
-    // EXCEL OLUŞTURMA METODU
+
     async exportLowStockAlerts(): Promise<Buffer> {
 
         const lowStockProducts = await this.inventoryRepository

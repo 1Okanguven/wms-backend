@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Not } from 'typeorm';
 import { CreateBranchDto } from './dto/create-branch.dto';
 import { UpdateBranchDto } from './dto/update-branch.dto';
 import { Branch } from './entities/branch.entity';
@@ -44,6 +44,16 @@ export class BranchService {
         const relationName = key.slice(0, -2);
         updateData[relationName] = { id: updateData[key] };
         delete updateData[key];
+      }
+    }
+
+    if (updateData.name) {
+      const existing = await this.branchRepository.findOneBy({
+        name: updateData.name,
+        id: Not(id)
+      });
+      if (existing) {
+        throw new ConflictException(`'${updateData.name}' isimli şube zaten mevcut.`);
       }
     }
 

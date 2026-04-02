@@ -5,11 +5,11 @@ import { User } from '../../user/entities/user.entity';
 import { Warehouse } from '../../warehouse/entities/warehouse.entity';
 
 export enum MovementType {
-    IN = 'IN',             // Mal Kabul
-    OUT = 'OUT',           // Fire / Hasar Çıkışı
-    SHIPMENT = 'SHIPMENT', // Müşteriye Sevkiyat
-    TRANSFER = 'TRANSFER', // Depo İçi Transfer
-    RETURN = 'RETURN',     // İptal / İade
+    IN = 'IN',
+    OUT = 'OUT',
+    SHIPMENT = 'SHIPMENT',
+    TRANSFER = 'TRANSFER',
+    RETURN = 'RETURN',
 }
 
 @Entity('movements')
@@ -23,11 +23,11 @@ export class Movement {
     @Column('int')
     quantity: number;
 
-    // Fatura No, İrsaliye No veya Sipariş Kodu gibi resmi referanslar
+
     @Column({ type: 'varchar', length: 100, nullable: true })
     referenceNumber: string | null;
 
-    // Alıcı, Şube veya Hedef Depo adı (Sevkiyat işlemlerinde kullanılır)
+
     @Column({ type: 'varchar', length: 255, nullable: true })
     destination: string | null;
 
