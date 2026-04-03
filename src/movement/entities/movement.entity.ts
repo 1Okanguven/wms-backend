@@ -10,6 +10,7 @@ export enum MovementType {
     SHIPMENT = 'SHIPMENT',
     TRANSFER = 'TRANSFER',
     RETURN = 'RETURN',
+    WASTE = 'WASTE',
 }
 
 @Entity('movements')

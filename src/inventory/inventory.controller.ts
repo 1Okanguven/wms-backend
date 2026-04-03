@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { InventoryService } from './inventory.service';
@@ -15,9 +15,9 @@ export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) { }
 
   @Post()
-  @Roles(UserRole.ADMIN)
-  create(@Body() createInventoryDto: CreateInventoryDto) {
-    return this.inventoryService.create(createInventoryDto);
+  @Roles(UserRole.ADMIN, UserRole.WORKER)
+  create(@Body() createInventoryDto: CreateInventoryDto, @Req() req: any) {
+    return this.inventoryService.create(createInventoryDto, req.user.userId);
   }
 
   @Get()
@@ -31,7 +31,7 @@ export class InventoryController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.WORKER)
   update(@Param('id') id: string, @Body() updateInventoryDto: UpdateInventoryDto) {
     return this.inventoryService.update(id, updateInventoryDto);
   }

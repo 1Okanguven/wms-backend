@@ -4,15 +4,18 @@ import { Repository } from 'typeorm';
 import { CreateInventoryDto } from './dto/create-inventory.dto';
 import { UpdateInventoryDto } from './dto/update-inventory.dto';
 import { Inventory } from './entities/inventory.entity';
+import { Movement, MovementType } from '../movement/entities/movement.entity';
 
 @Injectable()
 export class InventoryService {
   constructor(
     @InjectRepository(Inventory)
     private readonly inventoryRepository: Repository<Inventory>,
+    @InjectRepository(Movement)
+    private readonly movementRepository: Repository<Movement>,
   ) { }
 
-  async create(createInventoryDto: CreateInventoryDto) {
+  async create(createInventoryDto: CreateInventoryDto, userId: string) {
     const newInventory = this.inventoryRepository.create({
       quantity: createInventoryDto.quantity,
       product: { id: createInventoryDto.productId },
@@ -22,7 +25,19 @@ export class InventoryService {
       expirationDate: createInventoryDto.expirationDate
     });
 
-    return await this.inventoryRepository.save(newInventory);
+    const savedInventory = await this.inventoryRepository.save(newInventory);
+
+    const movement = this.movementRepository.create({
+      type: MovementType.IN,
+      quantity: createInventoryDto.quantity,
+      referenceNumber: 'Manuel Ekleme / Sayım Fazlası',
+      product: { id: createInventoryDto.productId },
+      destinationRack: { id: createInventoryDto.rackId },
+      user: { id: userId }
+    });
+    await this.movementRepository.save(movement);
+
+    return savedInventory;
   }
 
   findAll() {

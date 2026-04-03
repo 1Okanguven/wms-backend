@@ -15,7 +15,7 @@ export class DashboardController {
     constructor(private readonly dashboardService: DashboardService) { }
 
     @Get('summary')
-    @Roles(UserRole.ADMIN)
+    @Roles(UserRole.ADMIN, UserRole.WORKER)
     @ApiOperation({ summary: 'Yönetici özet istatistiklerini getirir' })
     getSummary() {
         return this.dashboardService.getSummary();

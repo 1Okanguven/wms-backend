@@ -22,7 +22,7 @@ export class RackService {
       throw new NotFoundException(`Koridor (Aisle) bulunamadı.`);
     }
 
-    const { name, code, barcode, aisleId } = createRackDto;
+    const { name, code, aisleId } = createRackDto;
 
 
     const existing = await this.rackRepository.findOneBy({
@@ -34,6 +34,7 @@ export class RackService {
     }
 
     const locationCode = `${aisle.locationCode}-${code.toUpperCase()}`;
+    const barcode = `LOC-${locationCode}`; // Automate barcode
 
     const newRack = this.rackRepository.create({
       name,
@@ -65,7 +66,7 @@ export class RackService {
 
   async update(id: string, updateRackDto: UpdateRackDto) {
     const rack = await this.findOne(id);
-    const { name, code, barcode, aisleId } = updateRackDto;
+    const { name, code, aisleId } = updateRackDto;
 
 
     const targetCode = code ? code.toUpperCase() : rack.code;
@@ -85,17 +86,6 @@ export class RackService {
     }
 
 
-    if (barcode && barcode !== rack.barcode) {
-      const existingBarcode = await this.rackRepository.findOneBy({
-        barcode: barcode,
-        id: Not(id)
-      });
-      if (existingBarcode) {
-        throw new ConflictException(`'${barcode}' barkodu başka bir rafa ait.`);
-      }
-    }
-
-
     const aisle = aisleId 
       ? await this.aisleRepository.findOneBy({ id: aisleId })
       : rack.aisle;
@@ -108,12 +98,14 @@ export class RackService {
     const updatedName = name || rack.name;
     const updatedCode = targetCode;
     const updatedLocationCode = `${aisle.locationCode}-${updatedCode}`;
+    const updatedBarcode = `LOC-${updatedLocationCode}`; // Automated recalculation
 
     Object.assign(rack, {
       ...updateRackDto,
       name: updatedName,
       code: updatedCode,
       locationCode: updatedLocationCode,
+      barcode: updatedBarcode,
       aisle
     });
 

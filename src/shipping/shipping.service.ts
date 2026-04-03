@@ -71,7 +71,9 @@ export class ShippingService {
 
 
             const movement = new Movement();
-            movement.type = MovementType.SHIPMENT;
+            // Eğer hedef kendi şubemiz ise TRANSFER, müşteri ise SHIPMENT olarak kaydet
+            movement.type = dto.shipmentType === 'INTERNAL' ? MovementType.TRANSFER : MovementType.SHIPMENT;
+            
             movement.quantity = dto.quantity;
             movement.product = { id: dto.productId } as any;
             movement.sourceRack = { id: dto.rackId } as any;

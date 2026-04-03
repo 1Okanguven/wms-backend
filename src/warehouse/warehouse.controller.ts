@@ -36,11 +36,13 @@ export class WarehouseController {
   }
 
   @Patch(':id')
+  @Roles(UserRole.ADMIN)
   update(@Param('id') id: string, @Body() updateWarehouseDto: UpdateWarehouseDto) {
     return this.warehouseService.update(id, updateWarehouseDto);
   }
 
   @Delete(':id')
+  @Roles(UserRole.ADMIN)
   remove(@Param('id') id: string) {
     return this.warehouseService.remove(id);
   }

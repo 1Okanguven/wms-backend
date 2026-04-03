@@ -27,7 +27,7 @@ export class MovementService {
         await this.increaseStock(queryRunner.manager, createMovementDto.productId, createMovementDto.destinationRackId, createMovementDto.quantity);
       }
 
-      if (createMovementDto.type === MovementType.OUT || createMovementDto.type === MovementType.SHIPMENT) {
+      if (createMovementDto.type === MovementType.OUT || createMovementDto.type === MovementType.SHIPMENT || createMovementDto.type === MovementType.WASTE) {
         if (!createMovementDto.sourceRackId) throw new BadRequestException(`${createMovementDto.type} işlemi için kaynak raf zorunludur.`);
         await this.decreaseStock(queryRunner.manager, createMovementDto.productId, createMovementDto.sourceRackId, createMovementDto.quantity);
       }
@@ -40,14 +40,20 @@ export class MovementService {
         await this.increaseStock(queryRunner.manager, createMovementDto.productId, createMovementDto.destinationRackId, createMovementDto.quantity);
       }
 
+      let finalType = createMovementDto.type;
+      if ((finalType === MovementType.OUT || finalType === MovementType.SHIPMENT) && (createMovementDto as any).targetWarehouseId) {
+          finalType = MovementType.TRANSFER;
+      }
+
       const newMovement = queryRunner.manager.create(Movement, {
-        type: createMovementDto.type,
+        type: finalType,
         quantity: createMovementDto.quantity,
         referenceNumber: createMovementDto.referenceNumber,
         product: { id: createMovementDto.productId },
         sourceRack: createMovementDto.sourceRackId ? { id: createMovementDto.sourceRackId } : undefined,
         destinationRack: createMovementDto.destinationRackId ? { id: createMovementDto.destinationRackId } : undefined,
         user: { id: userId },
+        targetWarehouse: (createMovementDto as any).targetWarehouseId ? { id: (createMovementDto as any).targetWarehouseId } : undefined,
       });
 
       const savedMovement = await queryRunner.manager.save(newMovement);
