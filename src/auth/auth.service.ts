@@ -13,20 +13,27 @@ export class AuthService {
 
     async login(loginDto: LoginDto) {
 
-        const user = await this.userService.findByEmail(loginDto.email);
+        const user = await this.userService.findByEmail(loginDto.email, ['warehouse']);
 
         if (!user || !(await bcrypt.compare(loginDto.password, user.password))) {
             throw new UnauthorizedException('E-posta veya şifre hatalı!');
         }
 
-        const payload = { sub: user.id, email: user.email, role: user.role };
+        const payload = { 
+            sub: user.id, 
+            email: user.email, 
+            role: user.role,
+            warehouseId: user.warehouseId,
+            warehouseName: user.warehouse?.name || null
+        };
 
         return {
             access_token: this.jwtService.sign(payload),
             user: {
                 id: user.id,
                 firstName: user.firstName,
-                role: user.role
+                role: user.role,
+                warehouseName: user.warehouse?.name || null
             }
         };
     }

@@ -47,8 +47,16 @@ export class RackService {
     return await this.rackRepository.save(newRack);
   }
 
-  findAll() {
+  findAll(user: any) {
+    const isWorker = user.role === 'WORKER';
+    const where: any = {};
+    
+    if (isWorker && user.warehouseId) {
+      where.aisle = { zone: { warehouse: { id: user.warehouseId } } };
+    }
+
     return this.rackRepository.find({
+      where,
       relations: ['aisle', 'aisle.zone', 'aisle.zone.warehouse'],
     });
   }

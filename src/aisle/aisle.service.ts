@@ -44,8 +44,16 @@ export class AisleService {
     return await this.aisleRepository.save(newAisle);
   }
 
-  findAll() {
+  findAll(user: any) {
+    const isWorker = user.role === 'WORKER';
+    const where: any = {};
+    
+    if (isWorker && user.warehouseId) {
+      where.zone = { warehouse: { id: user.warehouseId } };
+    }
+
     return this.aisleRepository.find({
+      where,
       relations: ['zone', 'zone.warehouse'],
     });
   }

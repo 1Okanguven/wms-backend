@@ -17,8 +17,8 @@ export class DashboardController {
     @Get('summary')
     @Roles(UserRole.ADMIN, UserRole.WORKER)
     @ApiOperation({ summary: 'Yönetici özet istatistiklerini getirir' })
-    getSummary() {
-        return this.dashboardService.getSummary();
+    getSummary(@Req() req: any) {
+        return this.dashboardService.getSummary(req.user);
     }
 
     @Get('export/low-stock')

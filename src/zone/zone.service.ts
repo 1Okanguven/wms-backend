@@ -46,8 +46,16 @@ export class ZoneService {
     return await this.zoneRepository.save(newZone);
   }
 
-  findAll() {
+  findAll(user: any) {
+    const isWorker = user.role === 'WORKER';
+    const where: any = {};
+    
+    if (isWorker && user.warehouseId) {
+      where.warehouse = { id: user.warehouseId };
+    }
+
     return this.zoneRepository.find({
+      where,
       relations: ['warehouse'],
     });
   }

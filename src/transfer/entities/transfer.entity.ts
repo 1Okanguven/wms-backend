@@ -36,16 +36,16 @@ export class Transfer {
     @Column({ type: 'varchar', nullable: true })
     referenceNumber: string;
 
-    @ManyToOne(() => Product, { onDelete: 'CASCADE' })
+    @ManyToOne(() => Product, { onDelete: 'RESTRICT' })
     product: Product;
 
-    @ManyToOne(() => Warehouse, { onDelete: 'CASCADE' })
+    @ManyToOne(() => Warehouse, { onDelete: 'RESTRICT' })
     sourceWarehouse: Warehouse;
     
     @ManyToOne(() => Rack, { nullable: true, onDelete: 'SET NULL' })
     sourceRack: Rack;
 
-    @ManyToOne(() => Warehouse, { onDelete: 'CASCADE' })
+    @ManyToOne(() => Warehouse, { onDelete: 'RESTRICT' })
     targetWarehouse: Warehouse;
 
     @CreateDateColumn()

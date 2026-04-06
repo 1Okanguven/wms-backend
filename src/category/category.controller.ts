@@ -20,11 +20,13 @@ export class CategoryController {
     return this.categoryService.create(createCategoryDto);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.WORKER)
   @Get()
   findAll() {
     return this.categoryService.findAll();
   }
 
+  @Roles(UserRole.ADMIN, UserRole.WORKER)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.categoryService.findOne(id);

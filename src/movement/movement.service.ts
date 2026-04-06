@@ -99,7 +99,25 @@ export class MovementService {
     await manager.save(inventory);
   }
 
-  findAll() {
+  async findAll(user: any) {
+    const isWorker = user.role === 'WORKER';
+    const warehouseId = user.warehouseId;
+
+    if (isWorker && warehouseId) {
+      return await this.movementRepository
+        .createQueryBuilder('movement')
+        .leftJoinAndSelect('movement.product', 'product')
+        .leftJoinAndSelect('movement.sourceRack', 'sRack')
+        .leftJoinAndSelect('sRack.aisle', 'sAisle')
+        .leftJoinAndSelect('sAisle.zone', 'sZone')
+        .leftJoinAndSelect('movement.destinationRack', 'dRack')
+        .leftJoinAndSelect('dRack.aisle', 'dAisle')
+        .leftJoinAndSelect('dAisle.zone', 'dZone')
+        .where('(sZone.warehouseId = :warehouseId OR dZone.warehouseId = :warehouseId)', { warehouseId })
+        .orderBy('movement.createdAt', 'DESC')
+        .getMany();
+    }
+
     return this.movementRepository.find({
       relations: ['product', 'sourceRack', 'destinationRack'],
       order: { createdAt: 'DESC' }

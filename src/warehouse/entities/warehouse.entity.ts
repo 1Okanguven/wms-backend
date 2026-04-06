@@ -28,7 +28,7 @@ export class Warehouse {
     @Column({ default: true })
     isActive: boolean;
 
-    @ManyToOne(() => Branch, branch => branch.warehouses, { onDelete: 'CASCADE' })
+    @ManyToOne(() => Branch, branch => branch.warehouses, { onDelete: 'RESTRICT' })
     branch: Branch;
 
     @OneToMany(() => Zone, zone => zone.warehouse)

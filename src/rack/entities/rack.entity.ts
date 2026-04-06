@@ -23,7 +23,7 @@ export class Rack {
     @Column({ default: true })
     isActive: boolean;
 
-    @ManyToOne(() => Aisle, aisle => aisle.racks, { onDelete: 'CASCADE' })
+    @ManyToOne(() => Aisle, aisle => aisle.racks, { onDelete: 'RESTRICT' })
     aisle: Aisle;
 
     @OneToMany(() => Inventory, inventory => inventory.rack)

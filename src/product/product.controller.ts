@@ -57,6 +57,7 @@ export class ProductController {
   }
 
 
+  @Roles(UserRole.ADMIN, UserRole.WORKER)
   @Get()
   @ApiQuery({ name: 'page', required: false, type: String, description: 'Sayfa numarası (Örn: 1)' })
   @ApiQuery({ name: 'limit', required: false, type: String, description: 'Getirilecek kayıt sayısı (Örn: 10)' })
@@ -72,6 +73,7 @@ export class ProductController {
     return this.productService.findAll(pageNumber, limitNumber, search);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.WORKER)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.productService.findOne(id);

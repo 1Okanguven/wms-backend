@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { ZoneService } from './zone.service';
 import { CreateZoneDto } from './dto/create-zone.dto';
 import { UpdateZoneDto } from './dto/update-zone.dto';
@@ -20,11 +20,13 @@ export class ZoneController {
     return this.zoneService.create(createZoneDto);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.WORKER)
   @Get()
-  findAll() {
-    return this.zoneService.findAll();
+  findAll(@Req() req: any) {
+    return this.zoneService.findAll(req.user);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.WORKER)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.zoneService.findOne(id);

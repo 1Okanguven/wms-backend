@@ -20,16 +20,19 @@ export class WarehouseController {
     return this.warehouseService.create(createWarehouseDto);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.WORKER)
   @Get()
   findAll() {
     return this.warehouseService.findAll();
   }
 
+  @Roles(UserRole.ADMIN, UserRole.WORKER)
   @Get('shippable')
   findShippable() {
     return this.warehouseService.findShippable();
   }
 
+  @Roles(UserRole.ADMIN, UserRole.WORKER)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.warehouseService.findOne(id);

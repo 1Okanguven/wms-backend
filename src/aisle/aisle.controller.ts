@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { AisleService } from './aisle.service';
@@ -20,11 +20,13 @@ export class AisleController {
     return this.aisleService.create(createAisleDto);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.WORKER)
   @Get()
-  findAll() {
-    return this.aisleService.findAll();
+  findAll(@Req() req: any) {
+    return this.aisleService.findAll(req.user);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.WORKER)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.aisleService.findOne(id);

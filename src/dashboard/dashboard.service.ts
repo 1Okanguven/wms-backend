@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Product } from '../product/entities/product.entity';
 import { Movement } from '../movement/entities/movement.entity';
 import { Inventory } from '../inventory/entities/inventory.entity';
+import { Warehouse } from '../warehouse/entities/warehouse.entity';
 import * as ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
 
@@ -16,31 +17,71 @@ export class DashboardService {
         private readonly movementRepository: Repository<Movement>,
         @InjectRepository(Inventory)
         private readonly inventoryRepository: Repository<Inventory>,
+        @InjectRepository(Warehouse)
+        private readonly warehouseRepository: Repository<Warehouse>,
     ) { }
 
-    async getSummary() {
-        const totalProducts = await this.productRepository.count({
-            where: { isActive: true },
-        });
+    async getSummary(user: any) {
+        const isWorker = user.role === 'WORKER';
+        const warehouseId = user.warehouseId;
 
+        // Toplam Ürün (Globaldir, aktif olan tüm ürünler)
+        const productQuery = this.productRepository.createQueryBuilder('product')
+            .where('product.isActive = :isActive', { isActive: true });
+
+        const totalProducts = await productQuery.getCount();
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
 
-        const todaysMovements = await this.movementRepository
+        // Bugünkü Hareketler (Eğer worker ise kendi deposuna ait hareketler)
+        const movementQuery = this.movementRepository
             .createQueryBuilder('movement')
-            .where('movement.createdAt >= :today', { today })
-            .getCount();
+            .where('movement.createdAt >= :today', { today });
+
+        if (isWorker && warehouseId) {
+            // Worker için hareketleri depo bazlı filtrele (giriş veya çıkış rafı bu depoya aitse)
+            movementQuery
+                .leftJoin('movement.sourceRack', 'sRack')
+                .leftJoin('sRack.aisle', 'sAisle')
+                .leftJoin('sAisle.zone', 'sZone')
+                .leftJoin('movement.destinationRack', 'dRack')
+                .leftJoin('dRack.aisle', 'dAisle')
+                .leftJoin('dAisle.zone', 'dZone')
+                .andWhere('(sZone.warehouseId = :warehouseId OR dZone.warehouseId = :warehouseId)', { warehouseId });
+        }
+
+        const todaysMovements = await movementQuery.getCount();
 
 
-        const inventorySum = await this.inventoryRepository
+        // Toplam Stok (Miktar bazlı, worker ise sadece kendi deposu)
+        const inventoryQuery = this.inventoryRepository
             .createQueryBuilder('inventory')
-            .select('SUM(inventory.quantity)', 'total')
-            .getRawOne();
+            .select('SUM(inventory.quantity)', 'total');
 
-        const totalStock = parseInt(inventorySum.total, 10) || 0;
+        if (isWorker && warehouseId) {
+            inventoryQuery
+                .innerJoin('inventory.rack', 'rack')
+                .innerJoin('rack.aisle', 'aisle')
+                .innerJoin('aisle.zone', 'zone')
+                .where('zone.warehouseId = :warehouseId', { warehouseId });
+        }
 
-        const lowStockProducts = await this.inventoryRepository
+        const inventorySum = await inventoryQuery.getRawOne();
+
+        const totalStock = parseInt(inventorySum?.total, 10) || 0;
+
+        // Depo Sayısı (Admin için hepsi, Worker için 1 adet)
+        const warehouseQuery = this.warehouseRepository.createQueryBuilder('warehouse')
+            .where('warehouse.isActive = :isActive', { isActive: true });
+
+        if (isWorker && warehouseId) {
+            warehouseQuery.andWhere('warehouse.id = :warehouseId', { warehouseId });
+        }
+
+        const totalWarehouses = await warehouseQuery.getCount();
+
+        const lowStockQuery = this.inventoryRepository
             .createQueryBuilder('inventory')
             .leftJoin('inventory.product', 'product')
             .select('product.name', 'productName')
@@ -49,14 +90,24 @@ export class DashboardService {
             .groupBy('product.id')
             .addGroupBy('product.name')
             .addGroupBy('product.sku')
-            .having('SUM(inventory.quantity) < :limit', { limit: 20 })
-            .getRawMany();
+            .having('SUM(inventory.quantity) < :limit', { limit: 20 });
+
+        if (isWorker && warehouseId) {
+            lowStockQuery
+                .innerJoin('inventory.rack', 'rack')
+                .innerJoin('rack.aisle', 'aisle')
+                .innerJoin('aisle.zone', 'zone')
+                .andWhere('zone.warehouseId = :warehouseId', { warehouseId });
+        }
+
+        const lowStockProducts = await lowStockQuery.getRawMany();
 
         return {
             overview: {
                 totalProducts,
                 totalStock,
                 todaysMovements,
+                totalWarehouses,
             },
             lowStockAlerts: lowStockProducts.map(item => ({
                 ...item,

@@ -40,8 +40,16 @@ export class InventoryService {
     return savedInventory;
   }
 
-  findAll() {
+  findAll(user: any) {
+    const isWorker = user.role === 'WORKER';
+    const where: any = {};
+    
+    if (isWorker && user.warehouseId) {
+      where.rack = { aisle: { zone: { warehouse: { id: user.warehouseId } } } };
+    }
+
     return this.inventoryRepository.find({
+      where,
       relations: [
         'product', 
         'rack', 

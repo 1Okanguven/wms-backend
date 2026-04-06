@@ -20,11 +20,13 @@ export class InventoryController {
     return this.inventoryService.create(createInventoryDto, req.user.userId);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.WORKER)
   @Get()
-  findAll() {
-    return this.inventoryService.findAll();
+  findAll(@Req() req: any) {
+    return this.inventoryService.findAll(req.user);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.WORKER)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.inventoryService.findOne(id);
@@ -36,9 +38,12 @@ export class InventoryController {
     return this.inventoryService.update(id, updateInventoryDto);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.WORKER)
   @Get('warehouse/:warehouseId')
-  findByWarehouse(@Param('warehouseId') warehouseId: string) {
-    return this.inventoryService.findByWarehouse(warehouseId);
+  findByWarehouse(@Param('warehouseId') warehouseId: string, @Req() req: any) {
+    const user = req.user;
+    const targetWarehouseId = (user.role === 'WORKER' && user.warehouseId) ? user.warehouseId : warehouseId;
+    return this.inventoryService.findByWarehouse(targetWarehouseId);
   }
 
   @Delete(':id')

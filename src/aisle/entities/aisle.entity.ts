@@ -20,7 +20,7 @@ export class Aisle {
     @Column({ default: true })
     isActive: boolean;
 
-    @ManyToOne(() => Zone, zone => zone.aisles, { onDelete: 'CASCADE' })
+    @ManyToOne(() => Zone, zone => zone.aisles, { onDelete: 'RESTRICT' })
     zone: Zone;
 
     @OneToMany(() => Rack, rack => rack.aisle)

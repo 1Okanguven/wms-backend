@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { RackService } from './rack.service';
@@ -20,11 +20,13 @@ export class RackController {
     return this.rackService.create(createRackDto);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.WORKER)
   @Get()
-  findAll() {
-    return this.rackService.findAll();
+  findAll(@Req() req: any) {
+    return this.rackService.findAll(req.user);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.WORKER)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.rackService.findOne(id);

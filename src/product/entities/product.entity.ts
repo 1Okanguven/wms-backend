@@ -34,7 +34,7 @@ export class Product {
     @Column({ nullable: true })
     imageUrl: string;
 
-    @ManyToOne(() => Company, company => company.products, { onDelete: 'CASCADE' })
+    @ManyToOne(() => Company, company => company.products, { onDelete: 'RESTRICT' })
     company: Company;
 
     @OneToMany(() => Inventory, inventory => inventory.product)

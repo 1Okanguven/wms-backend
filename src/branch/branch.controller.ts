@@ -20,11 +20,13 @@ export class BranchController {
     return this.branchService.create(createBranchDto);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.WORKER)
   @Get()
   findAll() {
     return this.branchService.findAll();
   }
 
+  @Roles(UserRole.ADMIN, UserRole.WORKER)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.branchService.findOne(id);

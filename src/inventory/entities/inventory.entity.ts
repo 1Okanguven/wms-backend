@@ -20,10 +20,10 @@ export class Inventory {
     @Column({ type: 'date', nullable: true })
     expirationDate: Date;
 
-    @ManyToOne(() => Product, product => product.inventories, { onDelete: 'CASCADE' })
+    @ManyToOne(() => Product, product => product.inventories, { onDelete: 'RESTRICT' })
     product: Product;
 
-    @ManyToOne(() => Rack, rack => rack.inventories, { onDelete: 'CASCADE' })
+    @ManyToOne(() => Rack, rack => rack.inventories, { onDelete: 'RESTRICT' })
     rack: Rack;
 
     @CreateDateColumn()

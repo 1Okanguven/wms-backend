@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import { Warehouse } from '../../warehouse/entities/warehouse.entity';
 
 export enum UserRole {
     ADMIN = 'ADMIN',
@@ -27,6 +28,13 @@ export class User {
 
     @Column({ default: true })
     isActive: boolean;
+
+    @Column({ nullable: true })
+    warehouseId: string;
+
+    @ManyToOne(() => Warehouse, { nullable: true, onDelete: 'SET NULL' })
+    @JoinColumn({ name: 'warehouseId' })
+    warehouse: Warehouse;
 
     @CreateDateColumn()
     createdAt: Date;

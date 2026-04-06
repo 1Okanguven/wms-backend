@@ -8,9 +8,10 @@ import { Movement } from '../movement/entities/movement.entity';
 import { Inventory } from '../inventory/entities/inventory.entity';
 import { Zone } from '../zone/entities/zone.entity';
 import { Rack } from '../rack/entities/rack.entity';
+import { Warehouse } from '../warehouse/entities/warehouse.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Product, Movement, Inventory, Zone, Rack])],
+  imports: [TypeOrmModule.forFeature([Product, Movement, Inventory, Zone, Rack, Warehouse])],
   providers: [DashboardService],
   controllers: [DashboardController]
 })

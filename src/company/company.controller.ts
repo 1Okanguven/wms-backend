@@ -20,11 +20,13 @@ export class CompanyController {
     return this.companyService.create(createCompanyDto);
   }
 
+  @Roles(UserRole.ADMIN, UserRole.WORKER)
   @Get()
   findAll() {
     return this.companyService.findAll();
   }
 
+  @Roles(UserRole.ADMIN, UserRole.WORKER)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.companyService.findOne(id);

@@ -23,7 +23,7 @@ export class Zone {
     @Column({ default: true })
     isActive: boolean;
 
-    @ManyToOne(() => Warehouse, warehouse => warehouse.zones, { onDelete: 'CASCADE' })
+    @ManyToOne(() => Warehouse, warehouse => warehouse.zones, { onDelete: 'RESTRICT' })
     warehouse: Warehouse;
 
     @OneToMany(() => Aisle, aisle => aisle.zone)

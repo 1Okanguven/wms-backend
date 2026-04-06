@@ -22,7 +22,7 @@ export class Branch {
     @Column({ default: true })
     isActive: boolean;
 
-    @ManyToOne(() => Company, company => company.branches, { onDelete: 'CASCADE' })
+    @ManyToOne(() => Company, company => company.branches, { onDelete: 'RESTRICT' })
     company: Company;
 
     @OneToMany(() => Warehouse, warehouse => warehouse.branch)
