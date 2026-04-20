@@ -103,25 +103,43 @@ export class MovementService {
     const isWorker = user.role === 'WORKER';
     const warehouseId = user.warehouseId;
 
+    const query = this.movementRepository.createQueryBuilder('movement')
+      .leftJoin('movement.product', 'product')
+      .leftJoin('movement.sourceRack', 'sRack')
+      .leftJoin('movement.destinationRack', 'dRack')
+      .select([
+        'movement.id',
+        'movement.type',
+        'movement.quantity',
+        'movement.referenceNumber',
+        'movement.createdAt',
+        'movement.shipmentType',
+        'movement.customerName',
+        'movement.destination',
+        'movement.deliveryAddress',
+        'movement.trackingNumber',
+        'movement.shippingCompany',
+        'product.id',
+        'product.name',
+        'product.sku',
+        'sRack.id',
+        'sRack.name',
+        'sRack.code',
+        'dRack.id',
+        'dRack.name',
+        'dRack.code'
+      ])
+      .orderBy('movement.createdAt', 'DESC');
+
     if (isWorker && warehouseId) {
-      return await this.movementRepository
-        .createQueryBuilder('movement')
-        .leftJoinAndSelect('movement.product', 'product')
-        .leftJoinAndSelect('movement.sourceRack', 'sRack')
-        .leftJoinAndSelect('sRack.aisle', 'sAisle')
-        .leftJoinAndSelect('sAisle.zone', 'sZone')
-        .leftJoinAndSelect('movement.destinationRack', 'dRack')
-        .leftJoinAndSelect('dRack.aisle', 'dAisle')
-        .leftJoinAndSelect('dAisle.zone', 'dZone')
-        .where('(sZone.warehouseId = :warehouseId OR dZone.warehouseId = :warehouseId)', { warehouseId })
-        .orderBy('movement.createdAt', 'DESC')
-        .getMany();
+      query.leftJoin('sRack.aisle', 'sAisle')
+           .leftJoin('sAisle.zone', 'sZone')
+           .leftJoin('dRack.aisle', 'dAisle')
+           .leftJoin('dAisle.zone', 'dZone')
+           .where('(sZone.warehouseId = :warehouseId OR dZone.warehouseId = :warehouseId)', { warehouseId });
     }
 
-    return this.movementRepository.find({
-      relations: ['product', 'sourceRack', 'destinationRack'],
-      order: { createdAt: 'DESC' }
-    });
+    return await query.getMany();
   }
 
   async findOne(id: string) {

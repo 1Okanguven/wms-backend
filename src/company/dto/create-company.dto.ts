@@ -6,7 +6,29 @@ export class CreateCompanyDto {
     name: string;
 
     @ApiPropertyOptional({ description: '11 Haneli Vergi Kimlik Numarası', example: '12345678901' })
+    @IsString()
+    @IsOptional()
     taxNumber?: string;
+
+    @ApiPropertyOptional({ description: 'Vergi Dairesi', example: 'Maslak' })
+    @IsString()
+    @IsOptional()
+    taxOffice?: string;
+
+    @ApiPropertyOptional({ description: 'E-Posta Adresi', example: 'info@logitech.com' })
+    @IsString()
+    @IsOptional()
+    email?: string;
+
+    @ApiPropertyOptional({ description: 'Telefon Numarası', example: '0212 123 45 67' })
+    @IsString()
+    @IsOptional()
+    phone?: string;
+
+    @ApiPropertyOptional({ description: 'Web Sitesi', example: 'https://www.logitech.com' })
+    @IsString()
+    @IsOptional()
+    website?: string;
 
     @ApiPropertyOptional({ description: 'İl', example: 'İstanbul' })
     @IsString()

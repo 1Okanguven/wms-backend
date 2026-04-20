@@ -50,25 +50,42 @@ export class InventoryService {
     return savedInventory;
   }
 
-  findAll(user: any) {
+  async findAll(user: any) {
     const isWorker = user.role === 'WORKER';
-    const where: any = {};
-    
-    if (isWorker && user.warehouseId) {
-      where.rack = { aisle: { zone: { warehouse: { id: user.warehouseId } } } };
+    const warehouseId = user.warehouseId;
+
+    const query = this.inventoryRepository.createQueryBuilder('inventory')
+      .leftJoin('inventory.product', 'product')
+      .leftJoin('inventory.rack', 'rack')
+      .leftJoin('rack.aisle', 'aisle')
+      .leftJoin('aisle.zone', 'zone')
+      .leftJoin('zone.warehouse', 'warehouse')
+      .leftJoin('warehouse.branch', 'branch')
+      .select([
+        'inventory.id',
+        'inventory.quantity',
+        'inventory.lotNumber',
+        'inventory.productionDate',
+        'inventory.expirationDate',
+        'product.id',
+        'product.name',
+        'product.sku',
+        'product.unit',
+        'rack.id',
+        'rack.code',
+        'rack.locationCode',
+        'aisle.id',
+        'zone.id',
+        'warehouse.id',
+        'warehouse.name',
+        'branch.name'
+      ]);
+
+    if (isWorker && warehouseId) {
+      query.where('warehouse.id = :warehouseId', { warehouseId });
     }
 
-    return this.inventoryRepository.find({
-      where,
-      relations: [
-        'product', 
-        'rack', 
-        'rack.aisle', 
-        'rack.aisle.zone', 
-        'rack.aisle.zone.warehouse', 
-        'rack.aisle.zone.warehouse.branch'
-      ]
-    });
+    return await query.getMany();
   }
 
   async findOne(id: string) {

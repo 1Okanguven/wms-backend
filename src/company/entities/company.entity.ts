@@ -14,6 +14,18 @@ export class Company {
     taxNumber: string;
 
     @Column({ type: 'varchar', length: 100, nullable: true })
+    taxOffice: string;
+
+    @Column({ type: 'varchar', length: 100, nullable: true })
+    email: string;
+
+    @Column({ type: 'varchar', length: 20, nullable: true })
+    phone: string;
+
+    @Column({ type: 'varchar', length: 150, nullable: true })
+    website: string;
+
+    @Column({ type: 'varchar', length: 100, nullable: true })
     city: string;
 
     @Column({ type: 'varchar', length: 100, nullable: true })
