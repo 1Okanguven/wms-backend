@@ -11,7 +11,7 @@ import { UseInterceptors, UploadedFile } from '@nestjs/common';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { FileInterceptor } from '@nestjs/platform-express';
-
+import { Audit } from '../common/decorators/audit.decorator';
 
 @Controller('product')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -21,10 +21,10 @@ export class ProductController {
 
   @Post()
   @Roles(UserRole.ADMIN)
+  @Audit('Ürün Oluşturuldu')
   create(@Body() createProductDto: CreateProductDto) {
     return this.productService.create(createProductDto);
   }
-
 
   @Post(':id/image')
   @Roles(UserRole.ADMIN)
@@ -56,7 +56,6 @@ export class ProductController {
     return this.productService.uploadImage(id, imageUrl);
   }
 
-
   @Roles(UserRole.ADMIN, UserRole.WORKER)
   @Get()
   @ApiQuery({ name: 'page', required: false, type: String, description: 'Sayfa numarası (Örn: 1)' })
@@ -81,12 +80,14 @@ export class ProductController {
 
   @Patch(':id')
   @Roles(UserRole.ADMIN)
+  @Audit('Ürün Güncellendi')
   update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
     return this.productService.update(id, updateProductDto);
   }
 
   @Delete(':id')
   @Roles(UserRole.ADMIN)
+  @Audit('Ürün Silindi')
   remove(@Param('id') id: string) {
     return this.productService.remove(id);
   }

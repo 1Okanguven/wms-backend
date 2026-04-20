@@ -4,9 +4,13 @@ import { InventoryService } from './inventory.service';
 import { InventoryController } from './inventory.controller';
 import { Inventory } from './entities/inventory.entity';
 import { Movement } from '../movement/entities/movement.entity';
+import { NotificationModule } from '../notifications/notification.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Inventory, Movement])],
+  imports: [
+    TypeOrmModule.forFeature([Inventory, Movement]),
+    NotificationModule
+  ],
   controllers: [InventoryController],
   providers: [InventoryService],
 })

@@ -22,12 +22,24 @@ import { OrderModule } from './order/order.module';
 import { ReceivingModule } from './receiving/receiving.module';
 import { ShippingModule } from './shipping/shipping.module';
 import { TransferModule } from './transfer/transfer.module';
+import { GraphQLModule } from '@nestjs/graphql';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { NotificationModule } from './notifications/notification.module';
+import { AuditLogModule } from './audit-log/audit-log.module';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    // 1. EKLENEN KISIM: Throttle modülünü projeye dahil edip limitleri belirliyoruz
+    ThrottlerModule.forRoot([{
+      ttl: 60000, // 60 saniye zaman penceresi
+      limit: 100, // 60 saniyede 100 isteğe izin ver (admin paneli için uygun)
+    }]),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'localhost',
@@ -39,11 +51,17 @@ import { TransferModule } from './transfer/transfer.module';
       autoLoadEntities: true,
       synchronize: true,
     }),
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      driver: ApolloDriver,
+      autoSchemaFile: 'src/schema.gql',
+      playground: true,
+    }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'uploads'),
       serveRoot: '/uploads',
     }),
     CompanyModule,
+    NotificationModule,
     BranchModule,
     WarehouseModule,
     ZoneModule,
@@ -60,8 +78,20 @@ import { TransferModule } from './transfer/transfer.module';
     ReceivingModule,
     ShippingModule,
     TransferModule,
+    AuditLogModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    // 2. EKLENEN KISIM: Korumayı tüm projedeki controller'lara (global) uygulamak için ekliyoruz
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
+    },
+  ],
 })
 export class AppModule { }

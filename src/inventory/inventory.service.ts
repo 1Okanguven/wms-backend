@@ -5,6 +5,7 @@ import { CreateInventoryDto } from './dto/create-inventory.dto';
 import { UpdateInventoryDto } from './dto/update-inventory.dto';
 import { Inventory } from './entities/inventory.entity';
 import { Movement, MovementType } from '../movement/entities/movement.entity';
+import { NotificationGateway } from '../notifications/notification.gateway';
 
 @Injectable()
 export class InventoryService {
@@ -13,6 +14,7 @@ export class InventoryService {
     private readonly inventoryRepository: Repository<Inventory>,
     @InjectRepository(Movement)
     private readonly movementRepository: Repository<Movement>,
+    private readonly notificationGateway: NotificationGateway,
   ) { }
 
   async create(createInventoryDto: CreateInventoryDto, userId: string) {
@@ -26,6 +28,14 @@ export class InventoryService {
     });
 
     const savedInventory = await this.inventoryRepository.save(newInventory);
+
+    // Gerçek zamanlı bildirim gönder
+    this.notificationGateway.sendSystemAlert({
+      type: 'STOCK_ADDED',
+      title: 'Yeni Stok Eklendi',
+      message: `${createInventoryDto.quantity} adet ürün başarıyla sisteme eklendi.`,
+      timestamp: new Date()
+    });
 
     const movement = this.movementRepository.create({
       type: MovementType.IN,
